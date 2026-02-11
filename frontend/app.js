@@ -1,135 +1,176 @@
-document.addEventListener("DOMContentLoaded", () => {
-// ініціалізація
-});
+/* ===== STATE ===== */
+const STORAGE_KEY = "lr1_events";
+let items = loadFromStorage();
+let editingId = null;
 
+/* ===== ELEMENTS ===== */
 const form = document.getElementById("createForm");
 const tableBody = document.getElementById("itemsTableBody");
 
-const firstError = document.querySelector(".error-text");
-const allFields = document.querySelectorAll(".field input");
+const titleInput = document.getElementById("titleInput");
+const dateInput = document.getElementById("dateInput");
+const locationInput = document.getElementById("locationInput");
+const capacityInput = document.getElementById("capacityInput");
+const descriptionInput = document.getElementById("descriptionInput");
 
-const userName = document.getElementById("userInput").value;
-const status = document.getElementById("statusSelect").value;
-const comment = document.getElementById("commentInput").value;
+const searchInput = document.getElementById("searchInput");
+const cancelEditBtn = document.getElementById("cancelEdit");
+const formTitle = document.getElementById("formTitle");
 
-const capacity = Number(document.getElementById("capacityInput").value);
+/* ===== SUBMIT ===== */
+form.addEventListener("submit", (e) => {
+    e.preventDefault();
 
-const title = document.getElementById("titleInput").value.trim();
+    const dto = readForm();
+    if (!validate(dto)) return;
 
-const el = document.getElementById("userInput");
-el.classList.add("invalid");
-el.classList.remove("invalid");
+    if (editingId) {
+        updateItem(dto);
+    } else {
+        addItem(dto);
+    }
 
-document.getElementById("saveBtn").setAttribute("disabled", "disabled");
-
-document.getElementById("saveBtn").disabled = true;
-
-const emptyState = document.getElementById("emptyState");
-emptyState.classList.toggle("hidden", items.length > 0);
-
-function renderTable(items) {
-const tbody = document.getElementById("itemsTableBody");
-const rowsHtml = items.map((item, index) => `
-<tr>
-<td>${index + 1}</td>
-<td>${item.title}</td>
-<td>${item.status}</td>
-<td>${item.createdAt}</td>
-<td>32
-<button type="button" class="delete-btn" dataid="${item.id}">Видалити</button>
-</td>
-</tr>
-`).join("");
-tbody.innerHTML = rowsHtml;
-}
-
-form.addEventListener("submit", (event) => {
-event.preventDefault();
-const dto = readForm();
-const isValid = validate(dto);
-if (!isValid) return;
-addItem(dto);
-renderTable(items);
-resetForm();
+    saveToStorage();
+    renderTable();
+    resetForm();
 });
 
-const tbody = document.getElementById("itemsTableBody");
-tbody.addEventListener("click", (event) => {
-const target = event.target;
-if (target.classList.contains("delete-btn")) {
-const id = Number(target.dataset.id);
-deleteItemById(id);
-renderTable(items);
-return;
+/* ===== SEARCH ===== */
+searchInput.addEventListener("input", renderTable);
+
+/* ===== CRUD ===== */
+function addItem(dto) {
+    items.push({
+        id: Date.now(),
+        ...dto
+    });
 }
-if (target.classList.contains("edit-btn")) {
-const id = Number(target.dataset.id);
-startEdit(id); // підставити дані в форму
-return;
+
+function updateItem(dto) {
+    items = items.map(item =>
+        item.id === editingId ? { ...item, ...dto } : item
+    );
 }
+
+function deleteItem(id) {
+    items = items.filter(item => item.id !== id);
+}
+
+/* ===== RENDER ===== */
+function renderTable() {
+    tableBody.innerHTML = "";
+
+    const searchValue = searchInput.value.toLowerCase();
+
+    const filtered = items
+        .filter(item => item.title.toLowerCase().includes(searchValue))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+    filtered.forEach((item, index) => {
+        tableBody.innerHTML += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.title}</td>
+                <td>${item.date}</td>
+                <td>${item.location}</td>
+                <td>${item.capacity}</td>
+                <td>
+                    <button type="button" data-edit="${item.id}">Редагувати</button>
+                    <button type="button" data-delete="${item.id}">Видалити</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+/* ===== EVENT DELEGATION ===== */
+tableBody.addEventListener("click", (e) => {
+
+    if (e.target.dataset.delete) {
+        deleteItem(Number(e.target.dataset.delete));
+        saveToStorage();
+        renderTable();
+    }
+
+    if (e.target.dataset.edit) {
+        startEdit(Number(e.target.dataset.edit));
+    }
 });
 
-const target = event.target;
-
-document.getElementById("userInput").addEventListener("input", () => {
-clearFieldError("userInput", "userError");
-});
-
-function clearErrors() {
-clearError("userInput", "userError");
-clearError("statusSelect", "statusError");
-clearError("commentInput", "commentError");
+/* ===== FORM ===== */
+function readForm() {
+    return {
+        title: titleInput.value.trim(),
+        date: dateInput.value,
+        location: locationInput.value.trim(),
+        capacity: Number(capacityInput.value),
+        description: descriptionInput.value.trim()
+    };
 }
 
 function validate(dto) {
-clearErrors();
-let isValid = true;
-const user = dto.userName.trim();
-if (user === "") {
-showError("userInput", "userError", "Поле є обов’язковим.");
-isValid = false;
-} else if (user.length < 3 || user.length > 30) {
-showError("userInput", "userError", "Довжина має бути від 3 до 30 символів.");
-isValid = false;
-}
-if (dto.status === "") {
-showError("statusSelect", "statusError", "Оберіть значення зі списку.");
-isValid = false;
-}
-const comment = dto.comment.trim();
-if (comment.length < 5) {
-showError("commentInput", "commentError", "Коментар має містити щонайменше 5 символів.");
-isValid = false;
-}
-return isValid;
+    clearErrors();
+    let valid = true;
+
+    if (!dto.title || dto.title.length < 3)
+        showError("titleInput", "titleError", "Мінімум 3 символи"), valid = false;
+
+    if (!dto.date)
+        showError("dateInput", "dateError", "Оберіть дату"), valid = false;
+
+    if (!dto.location)
+        showError("locationInput", "locationError", "Вкажіть місце"), valid = false;
+
+    if (!dto.capacity || dto.capacity <= 0)
+        showError("capacityInput", "capacityError", "Кількість має бути більше 0"), valid = false;
+
+    return valid;
 }
 
-const STORAGE_KEY = "lr1_items";
-function saveToStorage(items) {
-const json = JSON.stringify(items);
-localStorage.setItem(STORAGE_KEY, json);
+function startEdit(id) {
+    const item = items.find(x => x.id === id);
+    editingId = id;
+
+    titleInput.value = item.title;
+    dateInput.value = item.date;
+    locationInput.value = item.location;
+    capacityInput.value = item.capacity;
+    descriptionInput.value = item.description;
+
+    formTitle.textContent = "Редагування події";
+    cancelEditBtn.classList.remove("hidden");
 }
 
-addItem(dto);
-saveToStorage(items);
-renderTable(items);
+cancelEditBtn.addEventListener("click", resetForm);
+
+function resetForm() {
+    editingId = null;
+    form.reset();
+    clearErrors();
+    formTitle.textContent = "Нова подія";
+    cancelEditBtn.classList.add("hidden");
+    titleInput.focus();
+}
+
+/* ===== ERRORS ===== */
+function showError(inputId, errorId, message) {
+    document.getElementById(inputId).classList.add("invalid");
+    document.getElementById(errorId).textContent = message;
+}
+
+function clearErrors() {
+    document.querySelectorAll(".invalid").forEach(e => e.classList.remove("invalid"));
+    document.querySelectorAll(".error-text").forEach(e => e.textContent = "");
+}
+
+/* ===== STORAGE ===== */
+function saveToStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+}
 
 function loadFromStorage() {
-const json = localStorage.getItem(STORAGE_KEY);
-if (json === null) return [];
-try {
-const data = JSON.parse(json);
-return Array.isArray(data) ? data : [];
-} catch {
-return [];
-}
+    const json = localStorage.getItem(STORAGE_KEY);
+    return json ? JSON.parse(json) : [];
 }
 
-let items = loadFromStorage();
-renderTable(items);
-
-function computeNextId(items) {
-if (items.length === 0) return 1;
-const maxId = Math.max(...items.map(x => x.id));
-return maxId + 1;
-}
+renderTable();
