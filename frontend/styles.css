@@ -63,7 +63,13 @@ button {
     border: 1px solid #888;
     background: #f4a0ff;
     cursor: pointer;
+    transition: background 0.3s;
 }
+
+button:hover {
+    background: #f0c1f6;
+}
+
 
 .hidden {
     display: none;
@@ -83,4 +89,24 @@ td {
 
 th {
     background: #f0c1f6;
+}
+
+@media (max-width: 600px) {
+    input, textarea {
+        padding: 12px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+    }
+
+    form, section {
+        margin-bottom: 10px;
+    }
+
+    td, th {
+        font-size: 13px;
+        padding: 4px;
+    }
 }

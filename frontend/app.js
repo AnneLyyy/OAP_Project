@@ -1,11 +1,17 @@
-/* ===== STATE ===== */
-const STORAGE_KEY = "lr1_events";
-let items = loadFromStorage();
-let editingId = null;
+/* ================= STATE ================= */
 
-/* ===== ELEMENTS ===== */
+const STORAGE_KEY = "lr1_events";
+
+let items = loadFromStorage(); // масив подій
+let editingId = null; // якщо редагуємо — тут id
+
+/* ================= ELEMENTS ================= */
+
 const form = document.getElementById("createForm");
 const tableBody = document.getElementById("itemsTableBody");
+const searchInput = document.getElementById("searchInput");
+const cancelEditBtn = document.getElementById("cancelEdit");
+const formTitle = document.getElementById("formTitle");
 
 const titleInput = document.getElementById("titleInput");
 const dateInput = document.getElementById("dateInput");
@@ -13,15 +19,13 @@ const locationInput = document.getElementById("locationInput");
 const capacityInput = document.getElementById("capacityInput");
 const descriptionInput = document.getElementById("descriptionInput");
 
-const searchInput = document.getElementById("searchInput");
-const cancelEditBtn = document.getElementById("cancelEdit");
-const formTitle = document.getElementById("formTitle");
+/* ================= SUBMIT ================= */
 
-/* ===== SUBMIT ===== */
-form.addEventListener("submit", (e) => {
-    e.preventDefault();
+form.addEventListener("submit", function (e) {
+    e.preventDefault(); // щоб сторінка не перезавантажувалась
 
     const dto = readForm();
+
     if (!validate(dto)) return;
 
     if (editingId) {
@@ -31,42 +35,57 @@ form.addEventListener("submit", (e) => {
     }
 
     saveToStorage();
-    renderTable();
+    render();
     resetForm();
 });
 
-/* ===== SEARCH ===== */
-searchInput.addEventListener("input", renderTable);
+/* ================= SEARCH ================= */
 
-/* ===== CRUD ===== */
+searchInput.addEventListener("input", render);
+
+/* ================= CRUD ================= */
+
 function addItem(dto) {
-    items.push({
-        id: Date.now(),
+    const newItem = {
+        id: Date.now(), // простий унікальний id
         ...dto
-    });
+    };
+
+    items.push(newItem);
 }
 
 function updateItem(dto) {
-    items = items.map(item =>
-        item.id === editingId ? { ...item, ...dto } : item
-    );
+    items = items.map(function (item) {
+        if (item.id === editingId) {
+            return { ...item, ...dto };
+        } else {
+            return item;
+        }
+    });
 }
 
 function deleteItem(id) {
-    items = items.filter(item => item.id !== id);
+    items = items.filter(function (item) {
+        return item.id !== id;
+    });
 }
 
-/* ===== RENDER ===== */
-function renderTable() {
+/* ================= RENDER ================= */
+
+function render() {
     tableBody.innerHTML = "";
 
     const searchValue = searchInput.value.toLowerCase();
 
     const filtered = items
-        .filter(item => item.title.toLowerCase().includes(searchValue))
-        .sort((a, b) => a.date.localeCompare(b.date));
+        .filter(function (item) {
+            return item.title.toLowerCase().includes(searchValue);
+        })
+        .sort(function (a, b) {
+            return a.date.localeCompare(b.date); // сортування за датою
+        });
 
-    filtered.forEach((item, index) => {
+    filtered.forEach(function (item, index) {
         tableBody.innerHTML += `
             <tr>
                 <td>${index + 1}</td>
@@ -75,29 +94,34 @@ function renderTable() {
                 <td>${item.location}</td>
                 <td>${item.capacity}</td>
                 <td>
-                    <button type="button" data-edit="${item.id}">Редагувати</button>
-                    <button type="button" data-delete="${item.id}">Видалити</button>
+                    <button type="button" data-edit="${item.id}">Ред.</button>
+                    <button type="button" data-delete="${item.id}">Вид.</button>
                 </td>
             </tr>
         `;
     });
 }
 
-/* ===== EVENT DELEGATION ===== */
-tableBody.addEventListener("click", (e) => {
+/* ================= EVENT DELEGATION ================= */
 
-    if (e.target.dataset.delete) {
-        deleteItem(Number(e.target.dataset.delete));
+tableBody.addEventListener("click", function (e) {
+
+    const deleteId = e.target.dataset.delete;
+    const editId = e.target.dataset.edit;
+
+    if (deleteId) {
+        deleteItem(Number(deleteId));
         saveToStorage();
-        renderTable();
+        render();
     }
 
-    if (e.target.dataset.edit) {
-        startEdit(Number(e.target.dataset.edit));
+    if (editId) {
+        startEdit(Number(editId));
     }
 });
 
-/* ===== FORM ===== */
+/* ================= FORM LOGIC ================= */
+
 function readForm() {
     return {
         title: titleInput.value.trim(),
@@ -112,23 +136,48 @@ function validate(dto) {
     clearErrors();
     let valid = true;
 
-    if (!dto.title || dto.title.length < 3)
-        showError("titleInput", "titleError", "Мінімум 3 символи"), valid = false;
+    //Перевірка на дублікат
+    const isDuplicate = items.some(item => 
+        item.title.toLowerCase() === dto.title.toLowerCase() && 
+        item.date === dto.date &&
+        item.id !== editingId // зберігати той самий об'єкт при редагуванні
+    );
 
-    if (!dto.date)
-        showError("dateInput", "dateError", "Оберіть дату"), valid = false;
+    if (isDuplicate) {
+        showError("titleInput", "titleError", "Така подія вже існує на цю дату");
+        valid = false;
+    }
 
-    if (!dto.location)
-        showError("locationInput", "locationError", "Вкажіть місце"), valid = false;
+    if (!dto.title || dto.title.length < 3) {
+        showError("titleInput", "titleError", "Мінімум 3 символи");
+        valid = false;
+    }
 
-    if (!dto.capacity || dto.capacity <= 0)
-        showError("capacityInput", "capacityError", "Кількість має бути більше 0"), valid = false;
+    if (!dto.date) {
+        showError("dateInput", "dateError", "Оберіть дату");
+        valid = false;
+    }
+
+    if (!dto.location) {
+        showError("locationInput", "locationError", "Вкажіть локацію");
+        valid = false;
+    }
+
+    if (!dto.capacity || dto.capacity <= 0 || Number.isNaN(dto.capacity)) {
+        showError("capacityInput", "capacityError", "Кількість має бути більше 0");
+        valid = false;
+    }
 
     return valid;
 }
 
 function startEdit(id) {
-    const item = items.find(x => x.id === id);
+    const item = items.find(function (x) {
+        return x.id === id;
+    });
+
+    if (!item) return;
+
     editingId = id;
 
     titleInput.value = item.title;
@@ -141,36 +190,46 @@ function startEdit(id) {
     cancelEditBtn.classList.remove("hidden");
 }
 
-cancelEditBtn.addEventListener("click", resetForm);
-
 function resetForm() {
     editingId = null;
     form.reset();
     clearErrors();
+
     formTitle.textContent = "Нова подія";
     cancelEditBtn.classList.add("hidden");
+
+    // UX focus (після успішного збереження)
     titleInput.focus();
 }
 
-/* ===== ERRORS ===== */
+/* ================= ERRORS ================= */
+
 function showError(inputId, errorId, message) {
     document.getElementById(inputId).classList.add("invalid");
     document.getElementById(errorId).textContent = message;
 }
 
 function clearErrors() {
-    document.querySelectorAll(".invalid").forEach(e => e.classList.remove("invalid"));
-    document.querySelectorAll(".error-text").forEach(e => e.textContent = "");
+    document.querySelectorAll(".invalid").forEach(function (el) {
+        el.classList.remove("invalid");
+    });
+
+    document.querySelectorAll(".error-text").forEach(function (el) {
+        el.textContent = "";
+    });
 }
 
-/* ===== STORAGE ===== */
+/* ================= STORAGE ================= */
+
 function saveToStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
 }
 
 function loadFromStorage() {
-    const json = localStorage.getItem(STORAGE_KEY);
-    return json ? JSON.parse(json) : [];
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
 }
 
-renderTable();
+/* ================= INIT ================= */
+
+render();
