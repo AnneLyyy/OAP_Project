@@ -70,9 +70,11 @@ function onTableClick(e) {
     const editId = e.target.dataset.edit;
 
     if (deleteId) {
-        deleteItem(Number(deleteId));
-        saveToStorage();
-        render();
+        if (confirm("Ви впевнені, що хочете видалити подію?")) {
+            deleteItem(Number(deleteId));
+            saveToStorage();
+            render();
+        }
     }
 
     if (editId) {
