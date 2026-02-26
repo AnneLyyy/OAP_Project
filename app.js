@@ -6,8 +6,10 @@ const state = {
     items: loadFromStorage(),
     editingId: null,
     filters: {
-        search: ""
-    }
+        search: "",
+        sort: ""
+    },
+    sortDirection: "asc"
 };
 
 // ================= DOM =================
@@ -17,12 +19,15 @@ const tableBody = document.getElementById("itemsTableBody");
 const searchInput = document.getElementById("searchInput");
 const cancelEditBtn = document.getElementById("cancelEdit");
 const formTitle = document.getElementById("formTitle");
+const tableHead = document.querySelector("thead");
 
 const titleInput = document.getElementById("titleInput");
 const dateInput = document.getElementById("dateInput");
 const locationInput = document.getElementById("locationInput");
 const capacityInput = document.getElementById("capacityInput");
 const descriptionInput = document.getElementById("descriptionInput");
+
+const toggleSortBtn = document.getElementById("toggleSort"); // ✅ ДОДАНО
 
 // ================= INIT =================
 
@@ -37,6 +42,11 @@ function attachHandlers() {
 
     form.addEventListener("submit", onSubmit);
 
+    tableHead.addEventListener("click", function(e){
+        state.filters.sort = e.target.dataset.colname;
+        render();
+    });
+
     tableBody.addEventListener("click", onTableClick);
 
     searchInput.addEventListener("input", function (e) {
@@ -45,6 +55,11 @@ function attachHandlers() {
     });
 
     cancelEditBtn.addEventListener("click", resetForm);
+
+    toggleSortBtn.addEventListener("click", function () {
+        state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
+        render();
+    });
 }
 
 function onSubmit(e) {
@@ -121,7 +136,30 @@ function render() {
     }
 
     filtered.sort(function (a, b) {
-        return a.date.localeCompare(b.date);
+
+        let result = 0;
+
+        if (state.filters.sort === "number") {
+            result = a.date.localeCompare(b.date);
+        }
+
+        else if (state.filters.sort === "name") {
+            result = a.title.localeCompare(b.title);
+        }
+
+        else if (state.filters.sort === "local") {
+            result = a.location.localeCompare(b.location);
+        }
+
+        else if (state.filters.sort === "seats") {
+            result = a.capacity - b.capacity;
+        }
+
+        else {
+            result = a.date.localeCompare(b.date);
+        }
+
+        return state.sortDirection === "asc" ? result : -result;
     });
 
     filtered.forEach(function (item, index) {
@@ -180,7 +218,7 @@ function resetForm() {
     formTitle.textContent = "Нова подія";
     cancelEditBtn.classList.add("hidden");
 
-    titleInput.focus(); // UX focus
+    titleInput.focus();
 }
 
 // ================= VALIDATION =================

@@ -67,14 +67,20 @@
             <input id="searchInput" type="text">
         </div>
 
+        <div class="buttons">
+            <button type="button" id="toggleSort">
+                Змінити напрямок сортування
+            </button>
+        </div>
+
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Назва</th>
-                    <th>Дата</th>
-                    <th>Локація</th>
-                    <th>Місця</th>
+                    <th data-colname="number">#</th>
+                    <th data-colname="name">Назва</th>
+                    <th data-colname="date">Дата</th>
+                    <th data-colname="local">Локація</th>
+                    <th data-colname="seats">Місця</th>
                     <th>Дії</th>
                 </tr>
             </thead>
