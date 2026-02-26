@@ -2,6 +2,10 @@
     box-sizing: border-box;
 }
 
+html {
+    font-size: 16px;
+}
+
 body {
     font-family: "Tektur", sans-serif;
     background: #f4a0ff;
@@ -11,19 +15,22 @@ body {
 
 h1 {
     text-align: center;
+    font-size: 28px;
 }
 
 .container {
     max-width: 900px;
+    width: 100%;
     margin: auto;
 }
 
 form,
 section {
     background: #f4e5dc;
-    padding: 15px;
+    padding: 20px;
     border: 1px solid #ccc;
     margin-bottom: 20px;
+    border-radius: 8px;
 }
 
 .field {
@@ -40,8 +47,10 @@ select,
 textarea {
     background: #f0c1f6;
     width: 100%;
-    padding: 6px;
+    padding: 10px;
     border: 1px solid #000000;
+    border-radius: 6px;
+    font-size: 16px;
 }
 
 .invalid {
@@ -56,15 +65,18 @@ textarea {
 
 .buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
 button {
-    padding: 6px 12px;
+    padding: 10px 16px;
     border: 1px solid #888;
     background: #f4a0ff;
     cursor: pointer;
     transition: background 0.3s;
+    border-radius: 6px;
+    font-size: 16px;
 }
 
 button:hover {
@@ -75,9 +87,12 @@ button:hover {
     margin-bottom: 10px;
 }
 
-
 .hidden {
     display: none;
+}
+
+section {
+    overflow-x: auto;
 }
 
 table {
@@ -88,30 +103,60 @@ table {
 th,
 td {
     border: 1px solid #000000;
-    padding: 6px;
+    padding: 8px;
     text-align: left;
+    font-size: 15px;
 }
 
 th {
     background: #f0c1f6;
 }
 
-@media (max-width: 600px) {
-    input, textarea {
-        padding: 12px;
+/* ===== Планшети ===== */
+@media (max-width: 768px) {
+
+    body {
+        padding: 15px;
     }
 
     h1 {
-        font-size: 1.5rem;
-        margin-bottom: 15px;
+        font-size: 24px;
     }
 
-    form, section {
-        margin-bottom: 10px;
+    .buttons {
+        flex-direction: column;
     }
 
-    td, th {
+    button {
+        width: 100%;
+    }
+
+    th,
+    td {
+        font-size: 14px;
+    }
+}
+
+/* ===== Телефони ===== */
+@media (max-width: 480px) {
+
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    input,
+    textarea,
+    button {
+        font-size: 16px;
+    }
+
+    th,
+    td {
         font-size: 13px;
-        padding: 4px;
+        padding: 6px;
     }
 }
