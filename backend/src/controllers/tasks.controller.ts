@@ -20,9 +20,23 @@ export const getTask = (req: Request<TaskParams>, res: Response) => {
 };
 
 export const createTask = (req: Request, res: Response) => {
-  validateTask(req.body);
+  const { title, date, location, capacity, description } = req.body;
 
-  const task = tasksService.create(req.body);
+  validateTask({
+    title,
+    date,
+    location,
+    capacity,
+  });
+
+  const task = tasksService.create({
+    title,
+    date,
+    location,
+    capacity,
+    description,
+  });
+
   res.status(201).json(task);
 };
 
