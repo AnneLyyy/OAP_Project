@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { tasksService } from "../services/tasks.service.ts";
 import ApiError from "../infrastructure/apiError.ts";
+import { validateTask } from "../infrastructure/validation.ts";
 
 type TaskParams = {
   id: string;
@@ -19,6 +20,8 @@ export const getTask = (req: Request<TaskParams>, res: Response) => {
 };
 
 export const createTask = (req: Request, res: Response) => {
+  validateTask(req.body);
+
   const task = tasksService.create(req.body);
   res.status(201).json(task);
 };
