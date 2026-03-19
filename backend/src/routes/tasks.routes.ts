@@ -1,7 +1,8 @@
-import { Router } from "express";                     
-import type { Request, Response } from "express";     
+import { Router } from "express";
+import type { Request, Response } from "express";
 import { tasksService } from "../services/tasks.service.ts";
 import ApiError from "../infrastructure/apiError.ts";
+import { validateTask } from "../infrastructure/validation.ts";
 
 const router = Router();
 
@@ -19,6 +20,8 @@ const getTask = (req: Request, res: Response) => {
 };
 
 const createTask = (req: Request, res: Response) => {
+  validateTask(req.body);
+
   const task = tasksService.create(req.body);
   res.status(201).json(task);
 };
@@ -39,7 +42,6 @@ const deleteTask = (req: Request, res: Response) => {
   res.status(204).send();
 };
 
-// routes
 router.get("/", getTasks);
 router.get("/:id", getTask);
 router.post("/", createTask);
