@@ -1,0 +1,35 @@
+{
+  "name": "project_oap",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node ./backend/server.ts",
+    "build": "tsc",
+    "start": "node ./backend/server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnneLyyy/OAP_Project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AnneLyyy/OAP_Project/issues"
+  },
+  "homepage": "https://github.com/AnneLyyy/OAP_Project#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/uuid": "^10.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
