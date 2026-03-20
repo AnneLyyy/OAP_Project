@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import { tasksService } from "../services/tasks.service.ts";
 import ApiError from "../infrastructure/apiError.ts";
 import { validateTask } from "../infrastructure/validation.ts";
@@ -23,7 +23,6 @@ export const getTask = (req: Request<TaskParams>, res: Response) => {
 };
 
 export const createTask = (req: Request, res: Response) => {
-  // ✅ Валідація всього body
   validateTask(req.body);
 
   const task = tasksService.create(req.body);
@@ -32,7 +31,6 @@ export const createTask = (req: Request, res: Response) => {
 };
 
 export const updateTask = (req: Request<TaskParams>, res: Response) => {
-  // ⚠️ (опціонально) можна додати часткову валідацію
   if (Object.keys(req.body).length === 0) {
     throw new ApiError("VALIDATION_ERROR", "Empty body", 400);
   }

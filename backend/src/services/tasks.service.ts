@@ -1,4 +1,3 @@
-// backend/src/services/tasks.service.ts
 import { tasksStore } from "../store/tasks.store.ts";
 import type { Task } from "../types/task.ts";         
 
