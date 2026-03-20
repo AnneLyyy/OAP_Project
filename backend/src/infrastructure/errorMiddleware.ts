@@ -13,6 +13,7 @@ export default function errorMiddleware(
   next: NextFunction
 ) {
   const status = err.status || 500;
+
   res.status(status).json({
     error: {
       code: err.code || "INTERNAL_ERROR",

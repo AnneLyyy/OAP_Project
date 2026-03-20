@@ -12,12 +12,10 @@ import { requestLogger } from "./src/infrastructure/logMiddleware.ts";
 const app = express();
 
 // ================= MIDDLEWARES =================
+app.use(requestLogger);
 app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
-
-// ================= Логування =================
-app.use(requestLogger);
 
 // ================= ROOT ROUTE =================
 app.get("/", (req: Request, res: Response) => {
@@ -28,6 +26,17 @@ app.get("/", (req: Request, res: Response) => {
 app.use("/api/users", usersRoutes);
 app.use("/health", healthRoutes);
 app.use("/api/tasks", tasksRoutes);
+
+// ================= 404 =================
+app.use((req: Request, res: Response) => {
+  res.status(404).json({
+    error: {
+      code: "NOT_FOUND",
+      message: "Route not found",
+      details: [],
+    },
+  });
+});
 
 // ================= ERROR HANDLER =================
 app.use(errorMiddleware);

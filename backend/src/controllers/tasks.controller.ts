@@ -15,41 +15,43 @@ export const getTasks = (req: Request, res: Response) => {
 export const getTask = (req: Request<TaskParams>, res: Response) => {
   const task = tasksService.getById(req.params.id);
 
-  if (!task) throw new ApiError("NOT_FOUND", "Task not found", 404);
+  if (!task) {
+    throw new ApiError("NOT_FOUND", "Task not found", 404);
+  }
+
   res.json(task);
 };
 
 export const createTask = (req: Request, res: Response) => {
-  const { title, date, location, capacity, description } = req.body;
+  // ✅ Валідація всього body
+  validateTask(req.body);
 
-  validateTask({
-    title,
-    date,
-    location,
-    capacity,
-  });
-
-  const task = tasksService.create({
-    title,
-    date,
-    location,
-    capacity,
-    description,
-  });
+  const task = tasksService.create(req.body);
 
   res.status(201).json(task);
 };
 
 export const updateTask = (req: Request<TaskParams>, res: Response) => {
+  // ⚠️ (опціонально) можна додати часткову валідацію
+  if (Object.keys(req.body).length === 0) {
+    throw new ApiError("VALIDATION_ERROR", "Empty body", 400);
+  }
+
   const task = tasksService.update(req.params.id, req.body);
 
-  if (!task) throw new ApiError("NOT_FOUND", "Task not found", 404);
+  if (!task) {
+    throw new ApiError("NOT_FOUND", "Task not found", 404);
+  }
+
   res.json(task);
 };
 
 export const deleteTask = (req: Request<TaskParams>, res: Response) => {
   const ok = tasksService.delete(req.params.id);
 
-  if (!ok) throw new ApiError("NOT_FOUND", "Task not found", 404);
+  if (!ok) {
+    throw new ApiError("NOT_FOUND", "Task not found", 404);
+  }
+
   res.status(204).send();
 };
