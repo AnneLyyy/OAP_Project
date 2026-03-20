@@ -1,4 +1,3 @@
-// backend/src/infrastructure/errorMiddleware.ts
 import type { Request, Response, NextFunction } from "express";
 
 interface ApiError extends Error {

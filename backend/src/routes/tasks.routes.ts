@@ -4,6 +4,8 @@ import { tasksService } from "../services/tasks.service.ts";
 import ApiError from "../infrastructure/apiError.ts";
 import { validateTask } from "../infrastructure/validation.ts";
 
+console.log("TASK ROUTES LOADED");
+
 const router = Router();
 
 const getTasks = (req: Request, res: Response) => {
