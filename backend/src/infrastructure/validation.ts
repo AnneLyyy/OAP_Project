@@ -5,6 +5,7 @@ interface TaskData {
   date?: string;
   location?: string;
   capacity?: number;
+  description?: string;
 }
 
 export function validateTask(data: TaskData) {
@@ -23,6 +24,30 @@ export function validateTask(data: TaskData) {
   }
 
   if (data.capacity === undefined || data.capacity <= 0) {
+    errors.push("capacity must be > 0");
+  }
+
+  if (errors.length) {
+    throw new ApiError("VALIDATION_ERROR", "Invalid request body", 400, errors);
+  }
+}
+
+export function validatePartialTask(data: TaskData) {
+  const errors: string[] = [];
+
+  if (data.title !== undefined && data.title.length < 3) {
+    errors.push("title min 3 chars");
+  }
+
+  if (data.date !== undefined && isNaN(Date.parse(data.date))) {
+    errors.push("invalid date");
+  }
+
+  if (data.location !== undefined && data.location.length === 0) {
+    errors.push("location cannot be empty");
+  }
+
+  if (data.capacity !== undefined && data.capacity <= 0) {
     errors.push("capacity must be > 0");
   }
 

@@ -21,6 +21,14 @@ export const tasksStore = {
     return tasks[i];
   },
 
+    replace: (id: string, data: Omit<Task, "id">): Task | null => {
+      const i = tasks.findIndex((t) => t.id === id);
+      if (i === -1) return null;
+      const updated: Task = { id, ...data};
+      tasks[i] = updated;
+      return updated;
+  },
+
   delete: (id: string): boolean => {
     const i = tasks.findIndex((t) => t.id === id);
     if (i === -1) return false;

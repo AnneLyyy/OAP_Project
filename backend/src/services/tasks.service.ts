@@ -2,7 +2,7 @@ import { tasksStore } from "../store/tasks.store.ts";
 import type { Task } from "../types/task.ts";         
 
 export const tasksService = {
-  getAll: (query: any): Task[] => {
+    getAll: (query: any): Task[] => {
     let data = tasksStore.getAll();
 
     if (query.search) {
@@ -21,8 +21,8 @@ export const tasksService = {
       });
     }
 
-    const page = parseInt(query.page) || 1;
-    const pageSize = parseInt(query.pageSize) || 10;
+    const page = Math.max(parseInt(query.page) || 1, 1);
+    const pageSize = Math.max(parseInt(query.pageSize) || 10, 1);
     const start = (page - 1) * pageSize;
 
     return data.slice(start, start + pageSize);
@@ -30,7 +30,20 @@ export const tasksService = {
 
   getById: (id: string): Task | undefined => tasksStore.getById(id),
   create: (data: Omit<Task, "id">): Task => tasksStore.create(data),
-  update: (id: string, data: Partial<Task>): Task | null =>
-    tasksStore.update(id, data),
+  update: (id: string, data: Omit<Task, "id">): Task | null =>
+      tasksStore.update(id, data),
+  replace: (id: string, data: Omit<Task, "id">): Task | null =>
+    tasksStore.replace(id, data),
+  bulkReplace: (items: {id: string; data: Omit<Task, "id">}[]) => {
+    const results: Task[] = [];
+    for (const item of items) {
+      const updated = tasksStore.replace(item.id, item.data);
+      if (updated !== null) {
+        results.push(updated);
+      }
+    }
+
+    return results;
+  },
   delete: (id: string): boolean => tasksStore.delete(id),
 };
