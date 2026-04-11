@@ -28,6 +28,22 @@ export const tasksService = {
     return data.slice(start, start + pageSize);
   },
 
+  getByDate: (from: string, to: string) => {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    let data = tasksStore.getAll();
+
+    data = data.filter(task => {
+      const tasksDate = new Date(task.date);
+      return tasksDate >= fromDate && tasksDate <= toDate;
+    } );
+
+    data = data.sort((a, b) => a.date.localeCompare(b.date));
+
+    return data;
+  },
+
   getById: (id: string): Task | undefined => tasksStore.getById(id),
   create: (data: Omit<Task, "id">): Task => tasksStore.create(data),
   update: (id: string, data: Omit<Task, "id">): Task | null =>

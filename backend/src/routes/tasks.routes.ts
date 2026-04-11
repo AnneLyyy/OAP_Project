@@ -5,7 +5,11 @@ import * as controller from "../controllers/tasks.controller.ts";
 const router = Router();
 
 router.get("/", wrap(controller.getTasks));
+
+router.get("/by-date", controller.getTasksbyDate);
+
 router.get("/:id", wrap(controller.getTask));
+
 router.post("/", wrap(controller.createTask));
 
 router.put("/:id", wrap(controller.replaceTask));

@@ -77,6 +77,23 @@ export const bulkReplaceTasks = (req: Request, res: Response) => {
   res.json({ items: updated });
 };
 
+export const getTasksbyDate = (req: Request, res: Response) => {
+  const {from, to} = req.query;
+  console.log('inside method')
+
+  if (!from || !to) {
+    throw new ApiError("VALIDATION_ERROR", "from and to, pupupu", 400);
+  }
+
+  if (isNaN(Date.parse(from as string)) || isNaN(Date.parse(to as string))) {
+    throw new ApiError("VALIDATION_ERROR", "Invalid", 400);
+  }
+  
+  const tasks = tasksService.getByDate(from as string, to as string);
+  console.log(tasks)
+  res.json({items: tasks});
+};
+
 export const deleteTask = (req: Request<TaskParams>, res: Response) => {
   const ok = tasksService.delete(req.params.id);
 
