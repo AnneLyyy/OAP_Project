@@ -1,21 +1,17 @@
 import { Router } from "express";
+import * as ctrl from "../controllers/tasks.controller.ts";
 import wrap from "../infrastructure/wrap.ts";
-import * as controller from "../controllers/tasks.controller.ts";
 
 const router = Router();
 
-router.get("/", wrap(controller.getTasks));
+router.get("/", wrap(ctrl.getTasks));
+router.get("/by-date", wrap(ctrl.getTasksByDate));
+router.get("/with-users", wrap(ctrl.getTasksWithUsers));
+router.get("/count", wrap(ctrl.getTasksCount));
 
-router.get("/by-date", controller.getTasksbyDate);
-
-router.get("/:id", wrap(controller.getTask));
-
-router.post("/", wrap(controller.createTask));
-
-router.put("/:id", wrap(controller.replaceTask));
-router.patch("/:id", wrap(controller.updateTask));
-router.put("/", wrap(controller.bulkReplaceTasks));
-
-router.delete("/:id", wrap(controller.deleteTask));
+router.get("/:id", wrap(ctrl.getTask));
+router.post("/", wrap(ctrl.createTask));
+router.patch("/:id", wrap(ctrl.updateTask));
+router.delete("/:id", wrap(ctrl.deleteTask));
 
 export default router;

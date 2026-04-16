@@ -1,65 +1,82 @@
-import { tasksStore } from "../store/tasks.store.ts";
-import type { Task } from "../types/task.ts";         
+import { db } from "../db/db.ts";
+import { v4 as uuidv4 } from "uuid";
 
 export const tasksService = {
-    getAll: (query: any): Task[] => {
-    let data = tasksStore.getAll();
+  async getAll(query: any) {
+    let sql = "SELECT * FROM Tasks WHERE 1=1";
 
     if (query.search) {
-      data = data.filter(t =>
-        t.title.toLowerCase().includes(query.search.toLowerCase())
-      );
+      sql += ` AND title LIKE '%${query.search}%'`;
     }
 
     if (query.sortBy) {
-      data = data.sort((a, b) => {
-        let res = 0;
-        if (query.sortBy === "date") res = a.date.localeCompare(b.date);
-        if (query.sortBy === "title") res = a.title.localeCompare(b.title);
-        if (query.sortBy === "capacity") res = a.capacity - b.capacity;
-        return query.sortDir === "desc" ? -res : res;
-      });
+      sql += ` ORDER BY ${query.sortBy} ${query.sortDir || "ASC"}`;
     }
 
-    const page = Math.max(parseInt(query.page) || 1, 1);
-    const pageSize = Math.max(parseInt(query.pageSize) || 10, 1);
-    const start = (page - 1) * pageSize;
+    if (query.page && query.pageSize) {
+      const page = parseInt(query.page as string) || 1;
+      const pageSize = parseInt(query.pageSize as string) || 10;
+      const offset = (page - 1) * pageSize;
 
-    return data.slice(start, start + pageSize);
-  },
-
-  getByDate: (from: string, to: string) => {
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
-
-    let data = tasksStore.getAll();
-
-    data = data.filter(task => {
-      const tasksDate = new Date(task.date);
-      return tasksDate >= fromDate && tasksDate <= toDate;
-    } );
-
-    data = data.sort((a, b) => a.date.localeCompare(b.date));
-
-    return data;
-  },
-
-  getById: (id: string): Task | undefined => tasksStore.getById(id),
-  create: (data: Omit<Task, "id">): Task => tasksStore.create(data),
-  update: (id: string, data: Omit<Task, "id">): Task | null =>
-      tasksStore.update(id, data),
-  replace: (id: string, data: Omit<Task, "id">): Task | null =>
-    tasksStore.replace(id, data),
-  bulkReplace: (items: {id: string; data: Omit<Task, "id">}[]) => {
-    const results: Task[] = [];
-    for (const item of items) {
-      const updated = tasksStore.replace(item.id, item.data);
-      if (updated !== null) {
-        results.push(updated);
-      }
+      sql += ` LIMIT ${pageSize} OFFSET ${offset}`;
     }
 
-    return results;
+    return db.all(sql);
   },
-  delete: (id: string): boolean => tasksStore.delete(id),
+
+  async getById(id: string) {
+    return db.get("SELECT * FROM Tasks WHERE id = ?", [id]);
+  },
+
+  async create(data: any) {
+    const id = uuidv4();
+
+    await db.run(
+      `INSERT INTO Tasks VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        data.title,
+        data.date,
+        data.location,
+        data.capacity,
+        data.description,
+        data.userId || null
+      ]
+    );
+
+    return { id, ...data };
+  },
+
+  async update(id: string, data: any) {
+    await db.run(
+      `UPDATE Tasks SET title=?, date=?, location=?, capacity=?, description=? WHERE id=?`,
+      [data.title, data.date, data.location, data.capacity, data.description, id]
+    );
+
+    return this.getById(id);
+  },
+
+  async delete(id: string) {
+    const res = await db.run(`DELETE FROM Tasks WHERE id=?`, [id]);
+    return (res.changes ?? 0) > 0; // ✅ FIX
+  },
+
+  async getByDate(from: string, to: string) {
+    return db.all(
+      `SELECT * FROM Tasks WHERE date BETWEEN ? AND ? ORDER BY date`,
+      [from, to]
+    );
+  },
+
+  async getWithUsers() {
+    return db.all(`
+      SELECT t.*, u.name
+      FROM Tasks t
+      LEFT JOIN Users u ON u.id = t.userId
+    `);
+  },
+
+  async count() {
+    return db.get(`SELECT COUNT(*) as count FROM Tasks`);
+  }
 };
