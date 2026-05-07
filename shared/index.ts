@@ -3,5 +3,5 @@ export type {
   CreateTaskDto,
   UpdateTaskDto,
   SuccessResponseDto,
-  ApiErrorResponseDto as ApiErrorResponse
-} from "../../../shared/task.dto.ts";
+  ApiErrorResponseDto
+} from "./task.dto.ts";

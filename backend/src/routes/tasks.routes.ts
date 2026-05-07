@@ -8,9 +8,11 @@ router.get("/", wrap(ctrl.getTasks));
 router.get("/by-date", wrap(ctrl.getTasksByDate));
 router.get("/with-users", wrap(ctrl.getTasksWithUsers));
 router.get("/count", wrap(ctrl.getTasksCount));
+router.get("/top", wrap(ctrl.getTopTasks));
 
 router.get("/:id", wrap(ctrl.getTask));
 router.post("/", wrap(ctrl.createTask));
+router.put("/:id", wrap(ctrl.replaceTask));
 router.patch("/:id", wrap(ctrl.updateTask));
 router.delete("/:id", wrap(ctrl.deleteTask));
 

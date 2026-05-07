@@ -1,7 +1,7 @@
 import { db } from "./db.ts";
 
 export async function initDb() {
-  await db.exec(`
+  await (await db).exec(`
     CREATE TABLE IF NOT EXISTS Users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL
@@ -24,4 +24,6 @@ export async function initDb() {
       totalUsers INTEGER NOT NULL
     );
   `);
+
+  console.log("DB initialized");
 }

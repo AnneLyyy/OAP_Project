@@ -3,7 +3,7 @@ import { tasksService } from "../services/tasks.service.ts";
 import ApiError from "../infrastructure/apiError.ts";
 import { validateTask, validatePartialTask } from "../infrastructure/validation.ts";
 
-// типи
+// ===== DTO TYPES =====
 type TaskParams = { id: string };
 
 type QueryParams = {
@@ -16,13 +16,25 @@ type QueryParams = {
   pageSize?: string;
 };
 
+// ===== UNIFIED RESPONSE HELPER =====
+const ok = (data: any, meta?: any) => ({
+  success: true,
+  data,
+  meta
+});
+
 // ================= GET ALL =================
 export const getTasks = async (
   req: Request<{}, {}, {}, QueryParams>,
   res: Response
 ) => {
   const data = await tasksService.getAll(req.query);
-  res.json({ data, meta: { count: data.length } });
+
+  res.json(
+    ok(data, {
+      count: data.length
+    })
+  );
 };
 
 // ================= GET BY ID =================
@@ -36,15 +48,27 @@ export const getTask = async (
     throw new ApiError("NOT_FOUND", "Task not found", 404);
   }
 
-  res.json(task);
+  res.json(ok(task));
 };
 
 // ================= CREATE =================
 export const createTask = async (req: Request, res: Response) => {
   validateTask(req.body);
 
+  const duplicate = await tasksService.findDuplicate(req.body.title, req.body.date);
+
+  if (duplicate) {
+    throw new ApiError(
+      "CONFLICT",
+      "Task with this title and date already exists",
+      409,
+      ["title/date duplicate"]
+    );
+  }
+
   const task = await tasksService.create(req.body);
-  res.status(201).json(task);
+
+  res.status(201).json(ok(task));
 };
 
 // ================= UPDATE =================
@@ -58,13 +82,62 @@ export const updateTask = async (
 
   validatePartialTask(req.body);
 
+  const existing = await tasksService.getById(req.params.id);
+
+  if (!existing) {
+    throw new ApiError("NOT_FOUND", "Task not found", 404);
+  }
+
+  const nextTitle = req.body.title ?? existing.title;
+  const nextDate = req.body.date ?? existing.date;
+  const duplicate = await tasksService.findDuplicate(nextTitle, nextDate, req.params.id);
+
+  if (duplicate) {
+    throw new ApiError(
+      "CONFLICT",
+      "Task with this title and date already exists",
+      409,
+      ["title/date duplicate"]
+    );
+  }
+
   const task = await tasksService.update(req.params.id, req.body);
 
   if (!task) {
     throw new ApiError("NOT_FOUND", "Task not found", 404);
   }
 
-  res.json(task);
+  res.json(ok(task));
+};
+
+
+// ================= REPLACE =================
+export const replaceTask = async (
+  req: Request<TaskParams>,
+  res: Response
+) => {
+  validateTask(req.body);
+
+  const existing = await tasksService.getById(req.params.id);
+
+  if (!existing) {
+    throw new ApiError("NOT_FOUND", "Task not found", 404);
+  }
+
+  const duplicate = await tasksService.findDuplicate(req.body.title, req.body.date, req.params.id);
+
+  if (duplicate) {
+    throw new ApiError(
+      "CONFLICT",
+      "Task with this title and date already exists",
+      409,
+      ["title/date duplicate"]
+    );
+  }
+
+  const task = await tasksService.replace(req.params.id, req.body);
+
+  res.json(ok(task));
 };
 
 // ================= DELETE =================
@@ -72,9 +145,9 @@ export const deleteTask = async (
   req: Request<TaskParams>,
   res: Response
 ) => {
-  const ok = await tasksService.delete(req.params.id);
+  const okResult = await tasksService.delete(req.params.id);
 
-  if (!ok) {
+  if (!okResult) {
     throw new ApiError("NOT_FOUND", "Task not found", 404);
   }
 
@@ -94,16 +167,28 @@ export const getTasksByDate = async (
   }
 
   const data = await tasksService.getByDate(from, to);
-  res.json({ data });
+
+  res.json(ok(data));
 };
 
-// ================= JOIN =================
+// ================= TOP TASKS =================
+export const getTopTasks = async (
+  req: Request,
+  res: Response
+) => {
+  const data = await tasksService.getTopCapacity(3);
+
+  res.json(ok(data));
+};
+
+// ================= JOIN USERS =================
 export const getTasksWithUsers = async (
   req: Request,
   res: Response
 ) => {
   const data = await tasksService.getWithUsers();
-  res.json({ data });
+
+  res.json(ok(data));
 };
 
 // ================= COUNT =================
@@ -112,5 +197,6 @@ export const getTasksCount = async (
   res: Response
 ) => {
   const result = await tasksService.count();
-  res.json(result);
+
+  res.json(ok(result));
 };

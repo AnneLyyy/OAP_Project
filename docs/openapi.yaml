@@ -1,0 +1,383 @@
+openapi: 3.0.3
+
+info:
+  title: OAP Lab 04 Tasks API
+  version: 1.0.0
+  description: >
+    Простий опис API для лабораторної роботи №4.
+    API використовується для інтеграції frontend та backend.
+    Основна сутність — подія.
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Локальний backend-сервер
+
+tags:
+  - name: Tasks
+    description: Робота з подіями
+
+paths:
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: Отримати список подій
+      description: Повертає всі події, які frontend показує у таблиці.
+      responses:
+        "200":
+          description: Список подій успішно отримано
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskListResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    post:
+      tags:
+        - Tasks
+      summary: Створити нову подію
+      description: Створює нову подію за даними з форми на frontend.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskDto"
+      responses:
+        "201":
+          description: Подію створено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /tasks/{id}:
+    get:
+      tags:
+        - Tasks
+      summary: Отримати одну подію
+      description: Повертає деталі однієї події за її id.
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "200":
+          description: Подію знайдено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    put:
+      tags:
+        - Tasks
+      summary: Повністю оновити подію
+      description: Замінює всі основні поля події.
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaskDto"
+      responses:
+        "200":
+          description: Подію оновлено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    patch:
+      tags:
+        - Tasks
+      summary: Частково оновити подію
+      description: Оновлює тільки ті поля події, які були передані.
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTaskDto"
+      responses:
+        "200":
+          description: Подію частково оновлено
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    delete:
+      tags:
+        - Tasks
+      summary: Видалити подію
+      description: Видаляє подію за її id.
+      parameters:
+        - $ref: "#/components/parameters/TaskId"
+      responses:
+        "204":
+          description: Подію видалено, тіло відповіді порожнє
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /health:
+    get:
+      summary: Перевірити роботу backend
+      description: Простий маршрут для перевірки, що backend запущений.
+      responses:
+        "200":
+          description: Backend працює
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+components:
+  parameters:
+    TaskId:
+      name: id
+      in: path
+      required: true
+      description: Унікальний id події
+      schema:
+        type: string
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+  responses:
+    BadRequest:
+      description: Помилка валідації даних
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorResponse"
+
+    NotFound:
+      description: Подію не знайдено
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorResponse"
+
+    Conflict:
+      description: Конфлікт даних, наприклад така подія вже існує
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorResponse"
+
+    InternalServerError:
+      description: Внутрішня помилка сервера
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiErrorResponse"
+
+  schemas:
+    TaskDto:
+      type: object
+      description: Подія, яку backend повертає frontend-у
+      required:
+        - id
+        - title
+        - date
+        - location
+        - capacity
+      properties:
+        id:
+          type: string
+          description: Унікальний id події
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+        title:
+          type: string
+          description: Назва події
+          minLength: 3
+          example: "Концерт"
+
+        date:
+          type: string
+          format: date
+          description: Дата події у форматі YYYY-MM-DD
+          example: "2026-05-20"
+
+        location:
+          type: string
+          description: Місце проведення події
+          minLength: 2
+          example: "Київ"
+
+        capacity:
+          type: integer
+          description: Кількість місць
+          minimum: 1
+          example: 100
+
+        description:
+          type: string
+          description: Додатковий опис події
+          example: "Вечірній концерт у центрі міста"
+
+    CreateTaskDto:
+      type: object
+      description: Дані для створення нової події
+      required:
+        - title
+        - date
+        - location
+        - capacity
+      properties:
+        title:
+          type: string
+          minLength: 3
+          example: "Концерт"
+
+        date:
+          type: string
+          format: date
+          example: "2026-05-20"
+
+        location:
+          type: string
+          minLength: 2
+          example: "Київ"
+
+        capacity:
+          type: integer
+          minimum: 1
+          example: 100
+
+        description:
+          type: string
+          example: "Вечірній концерт"
+
+    UpdateTaskDto:
+      type: object
+      description: Дані для часткового оновлення події. Усі поля необов'язкові.
+      properties:
+        title:
+          type: string
+          minLength: 3
+          example: "Оновлена назва"
+
+        date:
+          type: string
+          format: date
+          example: "2026-06-01"
+
+        location:
+          type: string
+          minLength: 2
+          example: "Львів"
+
+        capacity:
+          type: integer
+          minimum: 1
+          example: 150
+
+        description:
+          type: string
+          example: "Оновлений опис"
+
+    TaskResponse:
+      type: object
+      description: Відповідь backend з однією подією
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+
+        data:
+          $ref: "#/components/schemas/TaskDto"
+
+    TaskListResponse:
+      type: object
+      description: Відповідь backend зі списком подій
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskDto"
+
+        meta:
+          type: object
+          properties:
+            count:
+              type: integer
+              example: 3
+
+    ApiErrorResponse:
+      type: object
+      description: Єдиний формат помилки API
+      required:
+        - success
+        - status
+        - code
+        - message
+      properties:
+        success:
+          type: boolean
+          example: false
+
+        status:
+          type: integer
+          example: 400
+
+        code:
+          type: string
+          example: VALIDATION_ERROR
+
+        message:
+          type: string
+          example: Помилка валідації
+
+        details:
+          type: array
+          items:
+            type: string
+          example:
+            - Назва має містити мінімум 3 символи

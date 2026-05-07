@@ -8,10 +8,39 @@ interface TaskData {
   description?: string;
 }
 
+const allowedFields = new Set([
+  "title",
+  "date",
+  "location",
+  "capacity",
+  "description"
+]);
+
+function validateUnknownFields(data: Record<string, unknown>, errors: string[]) {
+  for (const key of Object.keys(data)) {
+    if (!allowedFields.has(key)) {
+      errors.push(`unknown field: ${key}`);
+    }
+  }
+}
+
+function normalizeCapacity(value: unknown): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.trim() !== "") return Number(value);
+  return Number.NaN;
+}
+
 export function validateTask(data: TaskData) {
   const errors: string[] = [];
 
-  if (!data.title || data.title.length < 3) {
+  if (!data || typeof data !== "object") {
+    throw new ApiError("VALIDATION_ERROR", "Invalid request body", 400, ["body must be an object"]);
+  }
+
+  validateUnknownFields(data as Record<string, unknown>, errors);
+
+  if (!data.title || data.title.trim().length < 3) {
     errors.push("title min 3 chars");
   }
 
@@ -19,12 +48,18 @@ export function validateTask(data: TaskData) {
     errors.push("invalid date");
   }
 
-  if (!data.location) {
+  if (!data.location || data.location.trim().length === 0) {
     errors.push("location required");
   }
 
-  if (data.capacity === undefined || data.capacity <= 0) {
-    errors.push("capacity must be > 0");
+  const capacity = normalizeCapacity(data.capacity);
+
+  if (capacity === undefined || !Number.isInteger(capacity) || capacity <= 0) {
+    errors.push("capacity must be positive integer");
+  }
+
+  if (data.description !== undefined && typeof data.description !== "string") {
+    errors.push("description must be string");
   }
 
   if (errors.length) {
@@ -35,7 +70,13 @@ export function validateTask(data: TaskData) {
 export function validatePartialTask(data: TaskData) {
   const errors: string[] = [];
 
-  if (data.title !== undefined && data.title.length < 3) {
+  if (!data || typeof data !== "object") {
+    throw new ApiError("VALIDATION_ERROR", "Invalid request body", 400, ["body must be an object"]);
+  }
+
+  validateUnknownFields(data as Record<string, unknown>, errors);
+
+  if (data.title !== undefined && data.title.trim().length < 3) {
     errors.push("title min 3 chars");
   }
 
@@ -43,12 +84,18 @@ export function validatePartialTask(data: TaskData) {
     errors.push("invalid date");
   }
 
-  if (data.location !== undefined && data.location.length === 0) {
+  if (data.location !== undefined && data.location.trim().length === 0) {
     errors.push("location cannot be empty");
   }
 
-  if (data.capacity !== undefined && data.capacity <= 0) {
-    errors.push("capacity must be > 0");
+  const capacity = normalizeCapacity(data.capacity);
+
+  if (data.capacity !== undefined && (capacity === undefined || !Number.isInteger(capacity) || capacity <= 0)) {
+    errors.push("capacity must be positive integer");
+  }
+
+  if (data.description !== undefined && typeof data.description !== "string") {
+    errors.push("description must be string");
   }
 
   if (errors.length) {

@@ -1,13 +1,13 @@
 {
   "name": "project_oap",
   "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
+  "description": "OAP Lab 04 frontend-backend integration project",
   "type": "module",
   "scripts": {
-    "dev": "ts-node ./backend/server.ts",
-    "build": "tsc",
-    "start": "node ./backend/server.ts"
+    "dev:be": "tsx watch backend/server.ts",
+    "dev:fe": "vite frontend --host 127.0.0.1 --port 5500",
+    "typecheck": "tsc --noEmit",
+    "build:fe": "tsc --project tsconfig.frontend.json && node scripts/copy-frontend-build.mjs"
   },
   "repository": {
     "type": "git",
@@ -25,13 +25,17 @@
     "express": "^5.2.1",
     "sqlite": "^5.1.1",
     "sqlite3": "^6.0.1",
-    "uuid": "^9.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/node": "^25.0.2",
     "@types/uuid": "^10.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.0.10"
   }
 }
