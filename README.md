@@ -1,10 +1,19 @@
-# ЛР 4 — Інтеграція frontend/backend
+# Project OAP — Events App
 
-Проєкт демонструє інтеграцію окремого backend API та окремого frontend застосунку для сутності **Task / Подія**.
+Це навчальний вебпроєкт для роботи з подіями.
 
-## Запуск
+У проєкті є дві основні частини:
 
-Після розпакування архіву встановити залежності:
+- **backend** — сервер, який зберігає та обробляє події;
+- **frontend** — сторінка в браузері, де можна переглядати, додавати, редагувати і видаляти події.
+
+Frontend і backend працюють окремо, але спілкуються між собою через HTTP API.
+
+---
+
+## Як запустити проєкт
+
+Спочатку встановити залежності:
 
 ```bash
 npm install
@@ -22,100 +31,170 @@ npm run dev:be
 npm run dev:fe
 ```
 
-Відкрити frontend:
+Відкрити сайт у браузері:
 
 ```text
 http://127.0.0.1:5500
 ```
 
-Backend API:
+Backend API працює тут:
 
 ```text
 http://localhost:3000/api/v1
 ```
 
-OpenAPI контракт:
+OpenAPI-документація API:
 
 ```text
 http://localhost:3000/openapi.yaml
 ```
 
-> Важливо: `index.html` не потрібно відкривати через `file://`. Frontend запускається через локальний web-сервер.
+`index.html` не потрібно відкривати подвійним кліком. Frontend треба запускати через локальний сервер.
 
-## Чому у frontend є і `.ts`, і `.js`
+---
 
-- `frontend/app.ts` та `frontend/apiClient.ts` — вихідний TypeScript-код.
-- `frontend/app.js` та `frontend/apiClient.js` — скомпільований JavaScript, який виконує браузер.
+## Структура проєкту
 
-Браузер не виконує TypeScript напряму, тому в HTML підключений саме JavaScript:
+```text
+backend/   — серверна частина проєкту
+frontend/  — сторінка, форма, таблиця і логіка браузера
+shared/    — спільні DTO для frontend і backend
+docs/      — документація API
+data/      — локальна база SQLite
+scripts/   — допоміжні скрипти
+```
+
+---
+
+## Backend
+
+Backend відповідає за API.
+
+Він:
+
+- приймає запити від frontend;
+- працює з базою даних;
+- створює, читає, редагує і видаляє події;
+- перевіряє правильність даних;
+- повертає помилки у зрозумілому форматі;
+- налаштовує CORS, щоб браузер дозволяв запити з frontend.
+
+Основні маршрути backend:
+
+| Метод | Endpoint | Що робить |
+|---|---|---|
+| GET | `/api/v1/tasks` | отримати всі події |
+| GET | `/api/v1/tasks/:id` | отримати одну подію |
+| POST | `/api/v1/tasks` | створити подію |
+| PUT | `/api/v1/tasks/:id` | повністю оновити подію |
+| PATCH | `/api/v1/tasks/:id` | частково оновити подію |
+| DELETE | `/api/v1/tasks/:id` | видалити подію |
+| GET | `/api/v1/health` | перевірити, що backend працює |
+
+---
+
+## Frontend
+
+Frontend — це частина, яку бачить користувач у браузері.
+
+Він:
+
+- отримує події з backend;
+- показує події в таблиці;
+- має форму для створення і редагування подій;
+- дозволяє видаляти події;
+- показує повідомлення про помилки;
+- має стани завантаження, порожнього списку, успіху і помилки;
+- використовує окремий `apiClient` для запитів до backend.
+
+Основні файли frontend:
+
+```text
+frontend/app.ts        — логіка сторінки, таблиці і форми
+frontend/apiClient.ts  — запити до backend API
+frontend/app.js        — JavaScript для браузера
+frontend/apiClient.js  — JavaScript для браузера
+frontend/index.html    — HTML-сторінка
+frontend/styles.css    — стилі
+```
+
+---
+
+## Чому є `.ts` і `.js`
+
+`.ts` — це TypeScript-код, тобто вихідний код проєкту.
+
+`.js` — це JavaScript-код, який реально виконує браузер.
+
+Браузер не запускає TypeScript напряму, тому в HTML підключається JavaScript:
 
 ```html
 <script type="module" src="./app.js"></script>
 ```
 
-Це не порушення вимог: TypeScript залишається вихідним кодом, а JavaScript є результатом компіляції для браузера.
+TypeScript потрібен для типізації, DTO і перевірки помилок у коді.
 
-## Структура
-
-```text
-backend/
-  app.ts
-  server.ts
-  src/
-    controllers/
-    db/
-    domain/
-    infrastructure/
-    routes/
-    services/
-    types/
-frontend/
-  index.html
-  app.ts
-  apiClient.ts
-  app.js
-  apiClient.js
-  styles.css
-shared/
-  task.dto.ts
-  index.ts
-docs/
-  openapi.yaml
-data/
-  app.db
-```
+---
 
 ## Shared DTO
 
-DTO винесені в `shared/task.dto.ts` і використовуються обома частинами проєкту:
+Папка `shared/` містить спільні типи даних для frontend і backend.
 
-- backend імпортує DTO через `backend/src/types/task.ts` та `backend/src/domain/task.dto.ts`;
-- frontend імпортує DTO в `frontend/app.ts` і `frontend/apiClient.ts`.
+DTO описують, як виглядає подія і відповіді API.
 
-Основні DTO:
+Основна подія має такі поля:
 
-```ts
-TaskDto
-CreateTaskDto
-UpdateTaskDto
-SuccessResponseDto<T>
-ApiErrorResponseDto
+```text
+id
+title
+date
+location
+capacity
+description
 ```
 
-## API endpoints
+Спільні DTO потрібні, щоб frontend і backend використовували однаковий формат даних.
 
-| Метод | Endpoint | Призначення |
-|---|---|---|
-| GET | `/api/v1/tasks` | список подій |
-| GET | `/api/v1/tasks/:id` | деталі однієї події |
-| POST | `/api/v1/tasks` | створити подію |
-| PUT | `/api/v1/tasks/:id` | повністю замінити подію |
-| PATCH | `/api/v1/tasks/:id` | частково оновити подію |
-| DELETE | `/api/v1/tasks/:id` | видалити подію |
-| GET | `/api/v1/health` | перевірка backend |
-| GET | `/openapi.yaml` | OpenAPI контракт |
+---
+
+## OpenAPI
+
+Файл:
+
+```text
+docs/openapi.yaml
+```
+
+описує API проєкту.
+
+У ньому вказано:
+
+- які endpoints існують;
+- які методи підтримуються;
+- які DTO використовуються;
+- які помилки може повернути backend.
+
+Це документація API і контракт між frontend та backend.
+
+---
+
+## База даних
+
+Проєкт використовує локальну SQLite-базу.
+
+Файл бази знаходиться у папці:
+
+```text
+data/
+```
+
+SQLite підходить для навчального проєкту, бо не потребує окремого встановлення PostgreSQL або іншої СУБД.
+
+---
 
 ## Формат успішної відповіді
+
+Backend повертає успішні відповіді у такому форматі:
 
 ```json
 {
@@ -146,7 +225,11 @@ ApiErrorResponseDto
 }
 ```
 
+---
+
 ## Формат помилки
+
+Помилки повертаються в одному форматі:
 
 ```json
 {
@@ -158,18 +241,20 @@ ApiErrorResponseDto
 }
 ```
 
-Підтримані сценарії помилок:
+Підтримуються такі помилки:
 
-- `400 VALIDATION_ERROR` — неправильні дані;
-- `404 NOT_FOUND` — запис або маршрут не знайдено;
-- `409 CONFLICT` — подія з такою назвою і датою вже існує;
-- `500 ERROR` — непередбачена серверна помилка;
-- `NETWORK_ERROR` на frontend — backend вимкнений або CORS заблокував запит;
-- `TIMEOUT` на frontend — запит перевищив час очікування.
+- `400` — неправильні дані;
+- `404` — запис не знайдено;
+- `409` — така подія вже існує;
+- `500` — помилка сервера;
+- `NETWORK_ERROR` — backend вимкнений або запит заблоковано;
+- `TIMEOUT` — запит виконувався занадто довго.
+
+---
 
 ## CORS
 
-Backend дозволяє тільки конкретні frontend origins:
+Backend дозволяє запити тільки з конкретних frontend-адрес:
 
 ```text
 http://localhost:5500
@@ -178,63 +263,41 @@ http://localhost:5173
 http://127.0.0.1:5173
 ```
 
-Дозволені методи:
+Це потрібно, щоб браузер дозволяв frontend звертатися до backend.
+
+---
+
+## Перевірка
+
+Перевірити backend:
 
 ```text
-GET, POST, PUT, PATCH, DELETE, OPTIONS
+http://localhost:3000/api/v1/health
 ```
 
-Дозволені заголовки:
+Перевірити список подій:
 
 ```text
-Content-Type, Authorization
+http://localhost:3000/api/v1/tasks
 ```
 
-## Frontend
+Перевірити OpenAPI:
 
-Frontend:
-
-- отримує список подій з backend через `fetch`;
-- показує таблицю з полями DTO;
-- має форму створення/редагування;
-- має клієнтську валідацію;
-- показує `loading`, `empty`, `error`, `success` стани;
-- обробляє backend validation errors;
-- має пошук і сортування;
-- використовує окремий `apiClient`.
-
-Функції `frontend/apiClient.ts`:
-
-```ts
-getList()
-getById(id)
-create(dto)
-update(id, dto)
-replace(id, dto)
-remove(id)
+```text
+http://localhost:3000/openapi.yaml
 ```
 
-## Перевірка сценаріїв
+---
 
-### 1. GET список
+## Приклади curl-запитів
+
+Отримати список подій:
 
 ```bash
 curl http://localhost:3000/api/v1/tasks
 ```
 
-Очікувано: `200`, `success: true`, масив `data`.
-
-### 2. GET деталі
-
-Спочатку взяти `id` з відповіді списку, потім:
-
-```bash
-curl http://localhost:3000/api/v1/tasks/<id>
-```
-
-Очікувано: `200`, одна подія в `data`.
-
-### 3. POST створення
+Створити подію:
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/tasks \
@@ -242,19 +305,7 @@ curl -X POST http://localhost:3000/api/v1/tasks \
   -d '{"title":"Test event","date":"2026-05-10","location":"Kyiv","capacity":20,"description":"Demo"}'
 ```
 
-Очікувано: `201`, створена подія.
-
-### 4. PUT повна заміна
-
-```bash
-curl -X PUT http://localhost:3000/api/v1/tasks/<id> \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Updated event","date":"2026-05-11","location":"Lviv","capacity":30,"description":"Updated"}'
-```
-
-Очікувано: `200`, повністю оновлена подія.
-
-### 5. PATCH часткове оновлення
+Оновити подію частково:
 
 ```bash
 curl -X PATCH http://localhost:3000/api/v1/tasks/<id> \
@@ -262,90 +313,42 @@ curl -X PATCH http://localhost:3000/api/v1/tasks/<id> \
   -d '{"capacity":35}'
 ```
 
-Очікувано: `200`, змінено тільки `capacity`.
-
-### 6. DELETE
+Видалити подію:
 
 ```bash
 curl -X DELETE http://localhost:3000/api/v1/tasks/<id>
 ```
 
-Очікувано: `204 No Content`.
+---
 
-### 7. 400 validation error
+## Що реалізовано
 
-```bash
-curl -X POST http://localhost:3000/api/v1/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title":"ab","date":"bad-date","location":"","capacity":0}'
-```
+У проєкті реалізовано:
 
-Очікувано: `400`, `code: VALIDATION_ERROR`, список `details`.
+- окремий frontend;
+- окремий backend;
+- API з префіксом `/api/v1`;
+- CRUD для подій;
+- CORS whitelist;
+- TypeScript;
+- shared DTO;
+- OpenAPI-документація;
+- окремий `apiClient`;
+- frontend validation;
+- backend validation;
+- loading / empty / success / error стани;
+- обробка 400 / 404 / 409 / 500;
+- timeout через AbortController;
+- README з інструкцією запуску.
 
-### 8. 404 not found
+---
 
-```bash
-curl http://localhost:3000/api/v1/tasks/not-existing-id
-```
+## Примітка
 
-Очікувано: `404`, `code: NOT_FOUND`.
+Папка `node_modules` не додається до проєкту.
 
-### 9. 409 conflict
-
-Створити дві події з однаковими `title` і `date`:
-
-```bash
-curl -X POST http://localhost:3000/api/v1/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Duplicate event","date":"2026-05-12","location":"Kyiv","capacity":10}'
-
-curl -X POST http://localhost:3000/api/v1/tasks \
-  -H "Content-Type: application/json" \
-  -d '{"title":"Duplicate event","date":"2026-05-12","location":"Kyiv","capacity":10}'
-```
-
-Очікувано: другий запит поверне `409`, `code: CONFLICT`.
-
-### 10. Backend down
-
-1. Зупинити backend.
-2. Залишити frontend відкритим.
-3. Натиснути оновлення/створення події.
-
-Очікувано: frontend покаже помилку, що backend недоступний або запит заблоковано CORS.
-
-## Чекліст виконання вимог на “відмінно”
-
-- [x] Frontend і backend — окремі процеси на різних портах.
-- [x] Взаємодія тільки через HTTP API.
-- [x] API має префікс `/api/v1`.
-- [x] Є `GET /api/v1/tasks`.
-- [x] Є `GET /api/v1/tasks/:id`.
-- [x] Є `POST /api/v1/tasks`.
-- [x] Є `PUT /api/v1/tasks/:id`.
-- [x] Є `PATCH /api/v1/tasks/:id`.
-- [x] Є `DELETE /api/v1/tasks/:id`.
-- [x] Є CORS whitelist без `*`.
-- [x] Є єдиний формат успішних відповідей.
-- [x] Є єдиний формат помилок.
-- [x] Є обробка `400`, `404`, `409`, `500`.
-- [x] Є frontend loading/empty/error/success стани.
-- [x] Є frontend client-side validation.
-- [x] Є backend validation.
-- [x] Є окремий `apiClient` з `getList`, `getById`, `create`, `update`, `remove`.
-- [x] Є TypeScript DTO на frontend.
-- [x] Є shared DTO у папці `shared/`.
-- [x] Є OpenAPI контракт у `docs/openapi.yaml` і endpoint `/openapi.yaml`.
-- [x] Є `AbortController` timeout/cancel у `apiClient`.
-- [x] Є сценарії перевірки backend down / 500 / 400 у README.
-- [x] Frontend не відкривається через `file://`, а через локальний сервер.
-
-## Примітка про `node_modules`
-
-`node_modules` не додається до архіву. Після розпакування треба виконати:
+Після розпакування треба виконати:
 
 ```bash
 npm install
 ```
-
-Це особливо важливо для `sqlite3`, бо він має нативні файли під конкретну операційну систему.
