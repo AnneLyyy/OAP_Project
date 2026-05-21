@@ -9,6 +9,28 @@ import type {
 export const API_BASE_URL = "http://localhost:3000/api/v1";
 const TASKS_PATH = "/tasks";
 
+export type TaskQuery = {
+  search?: string;
+  sortBy?: keyof Pick<TaskDto, "title" | "date" | "location" | "capacity">;
+  sortDir?: "asc" | "desc";
+  page?: number;
+  pageSize?: number;
+};
+
+function buildQuery(params: TaskQuery = {}): string {
+  const query = new URLSearchParams();
+
+  if (params.search) query.set("search", params.search);
+  if (params.sortBy) query.set("sortBy", params.sortBy);
+  if (params.sortDir) query.set("sortDir", params.sortDir);
+  if (params.page) query.set("page", String(params.page));
+  if (params.pageSize) query.set("pageSize", String(params.pageSize));
+
+  const text = query.toString();
+
+  return text ? `?${text}` : "";
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -73,13 +95,26 @@ async function request<T>(
   return data as T;
 }
 
-// Назви функцій відповідають вимогам методички: getList/getById/create/update/remove.
-export function getList() {
-  return request<SuccessResponseDto<TaskDto[]>>(TASKS_PATH);
+// Основний список: тут працюють пошук, сортування і пагінація.
+export function getList(params: TaskQuery = {}) {
+  return request<SuccessResponseDto<TaskDto[]>>(`${TASKS_PATH}${buildQuery(params)}`);
 }
 
 export function getById(id: string) {
   return request<SuccessResponseDto<TaskDto>>(`${TASKS_PATH}/${encodeURIComponent(id)}`);
+}
+
+export function getByDate(from: string, to: string) {
+  const query = new URLSearchParams({ from, to }).toString();
+  return request<SuccessResponseDto<TaskDto[]>>(`${TASKS_PATH}/by-date?${query}`);
+}
+
+export function getTop() {
+  return request<SuccessResponseDto<TaskDto[]>>(`${TASKS_PATH}/top`);
+}
+
+export function getCount() {
+  return request<SuccessResponseDto<{ count: number }>>(`${TASKS_PATH}/count`);
 }
 
 export function create(dto: CreateTaskDto) {
@@ -98,7 +133,6 @@ export function update(id: string, dto: UpdateTaskDto) {
   });
 }
 
-
 export function replace(id: string, dto: CreateTaskDto) {
   return request<SuccessResponseDto<TaskDto>>(`${TASKS_PATH}/${encodeURIComponent(id)}`, {
     method: "PUT",
@@ -113,12 +147,15 @@ export function remove(id: string) {
   });
 }
 
-// Залишаю об'єкт api для сумісності з наявним app.ts.
+// Об'єкт api залишений для зручності app.ts.
 export const api = {
   getTasks: getList,
   getTaskById: getById,
+  getTasksByDate: getByDate,
+  getTopTasks: getTop,
+  getTasksCount: getCount,
   createTask: create,
   updateTask: update,
-    replaceTask: replace,
+  replaceTask: replace,
   deleteTask: remove
 };

@@ -14,7 +14,7 @@
 </head>
 
 <body>
-    
+
 <div id="notice"></div>
 <div class="container">
 
@@ -60,34 +60,90 @@
         </div>
     </form>
 
-    <!-- ТАБЛИЦЯ -->
+    <!-- ОДНА ТАБЛИЦЯ З ФІЛЬТРАМИ -->
     <section>
-        <h2>Список подій</h2>
-
-        <div class="field">
-            <label for="searchInput">Пошук по назві</label>
-            <input id="searchInput" type="text">
+        <div class="section-header">
+            <div>
+                <h2>Список подій</h2>
+                <p id="activeFilterInfo" class="muted-text">Показано звичайний список подій</p>
+            </div>
+            <div id="totalInfo" class="count-badge">Усього подій: 0</div>
         </div>
 
-        <div class="buttons">
-            <button type="button" id="toggleSort">
-                Змінити напрямок сортування
-            </button>
+        <div class="filter-panel">
+            <div class="field search-field">
+                <label for="searchInput">Пошук по назві</label>
+                <input id="searchInput" type="text" placeholder="Наприклад: концерт">
+            </div>
+
+            <div class="filter-grid">
+                <div class="field">
+                    <label for="sortFieldSelect">Сортувати за</label>
+                    <select id="sortFieldSelect">
+                        <option value="date">Датою</option>
+                        <option value="title">Назвою</option>
+                        <option value="location">Локацією</option>
+                        <option value="capacity">Кількістю місць</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="sortDirectionSelect">Напрямок</label>
+                    <select id="sortDirectionSelect">
+                        <option value="desc">За спаданням</option>
+                        <option value="asc">За зростанням</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="pageSizeSelect">Подій на сторінці</label>
+                    <select id="pageSizeSelect">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-grid date-grid">
+                <div class="field">
+                    <label for="fromDateInput">Дата від</label>
+                    <input id="fromDateInput" type="date">
+                </div>
+
+                <div class="field">
+                    <label for="toDateInput">Дата до</label>
+                    <input id="toDateInput" type="date">
+                </div>
+            </div>
+
+            <div class="buttons filter-actions">
+                <button type="button" id="applyFilters">Застосувати фільтри</button>
+                <button type="button" id="applyDateFilter">Показати за період</button>
+                <button type="button" id="topTasks">Топ-3 найбільші події</button>
+                <button type="button" id="resetFilters" class="secondary-btn">Скинути</button>
+            </div>
         </div>
 
         <table>
             <thead>
                 <tr>
-                    <th data-colname="number">#</th>
-                    <th data-colname="name">Назва</th>
-                    <th data-colname="date">Дата</th>
-                    <th data-colname="local">Локація</th>
-                    <th data-colname="seats">Місця</th>
+                    <th>#</th>
+                    <th>Назва</th>
+                    <th>Дата</th>
+                    <th>Локація</th>
+                    <th>Місця</th>
                     <th>Дії</th>
                 </tr>
             </thead>
             <tbody id="itemsTableBody"></tbody>
         </table>
+
+        <div class="pagination">
+            <button type="button" id="prevPage">Назад</button>
+            <span id="pageInfo">Сторінка 1</span>
+            <button type="button" id="nextPage">Далі</button>
+        </div>
     </section>
 
 </div>

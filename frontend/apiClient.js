@@ -1,5 +1,20 @@
 export const API_BASE_URL = "http://localhost:3000/api/v1";
 const TASKS_PATH = "/tasks";
+function buildQuery(params = {}) {
+    const query = new URLSearchParams();
+    if (params.search)
+        query.set("search", params.search);
+    if (params.sortBy)
+        query.set("sortBy", params.sortBy);
+    if (params.sortDir)
+        query.set("sortDir", params.sortDir);
+    if (params.page)
+        query.set("page", String(params.page));
+    if (params.pageSize)
+        query.set("pageSize", String(params.pageSize));
+    const text = query.toString();
+    return text ? `?${text}` : "";
+}
 async function request(path, options = {}, timeout = 10000) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
@@ -52,12 +67,22 @@ async function request(path, options = {}, timeout = 10000) {
     }
     return data;
 }
-// Назви функцій відповідають вимогам методички: getList/getById/create/update/remove.
-export function getList() {
-    return request(TASKS_PATH);
+// Основний список: тут працюють пошук, сортування і пагінація.
+export function getList(params = {}) {
+    return request(`${TASKS_PATH}${buildQuery(params)}`);
 }
 export function getById(id) {
     return request(`${TASKS_PATH}/${encodeURIComponent(id)}`);
+}
+export function getByDate(from, to) {
+    const query = new URLSearchParams({ from, to }).toString();
+    return request(`${TASKS_PATH}/by-date?${query}`);
+}
+export function getTop() {
+    return request(`${TASKS_PATH}/top`);
+}
+export function getCount() {
+    return request(`${TASKS_PATH}/count`);
 }
 export function create(dto) {
     return request(TASKS_PATH, {
@@ -85,10 +110,13 @@ export function remove(id) {
         method: "DELETE"
     });
 }
-// Залишаю об'єкт api для сумісності з наявним app.ts.
+// Об'єкт api залишений для зручності app.ts.
 export const api = {
     getTasks: getList,
     getTaskById: getById,
+    getTasksByDate: getByDate,
+    getTopTasks: getTop,
+    getTasksCount: getCount,
     createTask: create,
     updateTask: update,
     replaceTask: replace,

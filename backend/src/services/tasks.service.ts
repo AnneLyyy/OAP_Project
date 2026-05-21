@@ -129,21 +129,13 @@ export const tasksService = {
   },
 
   async getTopCapacity(limit = 3) {
-      console.log('entering ....')
-      return (await db).all(
-      `SELECT 
-        id,
-        title,
-        date,
-        location,
-        SUBSTR(date, 1, 7) as month,
-        MAX(capacity) as maxCap
-      FROM Tasks
-      WHERE date >= date('now', '-3 month')
-      GROUP BY month
-      ORDER BY maxCap DESC
-      LIMIT ?`,
-      [limit] 
+    return (await db).all(
+      `SELECT *
+       FROM Tasks
+       WHERE date >= date('now', '-3 month')
+       ORDER BY capacity DESC, date DESC
+       LIMIT ?`,
+      [limit]
     );
   },
 

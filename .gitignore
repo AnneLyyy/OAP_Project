@@ -1,5 +1,8 @@
 node_modules/
 dist/
+.vscode/
+data/*.db
+data/*.sqlite
 .postman/
 postman/
-data/*.db
+.git/

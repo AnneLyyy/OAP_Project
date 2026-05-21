@@ -11,17 +11,30 @@ body {
     background: #f4a0ff;
     margin: 0;
     padding: 20px;
+    color: #121212;
 }
 
 h1 {
     text-align: center;
     font-size: 28px;
+    margin: 0 0 20px;
+}
+
+h2 {
+    margin-top: 0;
 }
 
 .container {
     max-width: 900px;
     width: 100%;
     margin: auto;
+}
+
+#notice {
+    max-width: 900px;
+    margin: 0 auto 12px;
+    text-align: center;
+    font-weight: 600;
 }
 
 form,
@@ -40,6 +53,7 @@ section {
 label {
     display: block;
     margin-bottom: 4px;
+    font-weight: 500;
 }
 
 input,
@@ -50,7 +64,15 @@ textarea {
     padding: 10px;
     border: 1px solid #000000;
     border-radius: 6px;
+    font-family: inherit;
     font-size: 16px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: 2px solid #c643d7;
+    outline-offset: 1px;
 }
 
 .invalid {
@@ -74,17 +96,24 @@ button {
     border: 1px solid #888;
     background: #f4a0ff;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: background 0.3s, transform 0.15s, opacity 0.2s;
     border-radius: 6px;
+    font-family: inherit;
     font-size: 16px;
 }
 
-button:hover {
+button:hover:not(:disabled) {
     background: #f0c1f6;
+    transform: translateY(-1px);
 }
 
-#toggleSort {
-    margin-bottom: 10px;
+button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.secondary-btn {
+    background: #f4e5dc;
 }
 
 .hidden {
@@ -93,6 +122,55 @@ button:hover {
 
 section {
     overflow-x: auto;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+
+.muted-text {
+    margin: 4px 0 0;
+    color: #4b3d4f;
+    font-size: 14px;
+}
+
+.count-badge {
+    background: #f0c1f6;
+    border: 1px solid #000;
+    border-radius: 999px;
+    padding: 8px 12px;
+    white-space: nowrap;
+    font-size: 14px;
+}
+
+.filter-panel {
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+.search-field {
+    margin-bottom: 14px;
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.date-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.filter-actions {
+    margin-top: 4px;
 }
 
 table {
@@ -112,6 +190,25 @@ th {
     background: #f0c1f6;
 }
 
+td button {
+    padding: 7px 10px;
+    font-size: 14px;
+    margin: 2px;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 14px;
+}
+
+#pageInfo {
+    min-width: 110px;
+    text-align: center;
+}
+
 /* ===== Планшети ===== */
 @media (max-width: 768px) {
 
@@ -121,6 +218,15 @@ th {
 
     h1 {
         font-size: 24px;
+    }
+
+    .section-header {
+        flex-direction: column;
+    }
+
+    .filter-grid,
+    .date-grid {
+        grid-template-columns: 1fr;
     }
 
     .buttons {
@@ -149,6 +255,7 @@ th {
     }
 
     input,
+    select,
     textarea,
     button {
         font-size: 16px;
