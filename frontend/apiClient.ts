@@ -9,6 +9,20 @@ import type {
 export const API_BASE_URL = "http://localhost:3000/api/v1";
 const TASKS_PATH = "/tasks";
 
+export type TaskStatsDto = {
+  longestTitle: string;
+  longestTitleLength: number;
+  biggestCapacity: number;
+  biggestCapacityTitle: string;
+  upcomingEvents: number;
+  pastEvents: number;
+  byMonth: {
+    month: string;
+    count: number;
+  }[];
+  updatedAt: string;
+};
+
 export type TaskQuery = {
   search?: string;
   sortBy?: keyof Pick<TaskDto, "title" | "date" | "location" | "capacity">;
@@ -117,6 +131,10 @@ export function getCount() {
   return request<SuccessResponseDto<{ count: number }>>(`${TASKS_PATH}/count`);
 }
 
+export function getStats() {
+  return request<SuccessResponseDto<TaskStatsDto>>(`${TASKS_PATH}/stats`);
+}
+
 export function create(dto: CreateTaskDto) {
   return request<SuccessResponseDto<TaskDto>>(TASKS_PATH, {
     method: "POST",
@@ -154,6 +172,7 @@ export const api = {
   getTasksByDate: getByDate,
   getTopTasks: getTop,
   getTasksCount: getCount,
+  getTasksStats: getStats,
   createTask: create,
   updateTask: update,
   replaceTask: replace,

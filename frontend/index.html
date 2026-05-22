@@ -146,6 +146,48 @@
         </div>
     </section>
 
+    <!-- ТАБЛИЦЯ СТАТИСТИКИ -->
+    <section class="stats-section">
+        <div class="section-header">
+            <div>
+                <h2>Статистика подій</h2>
+                <p class="muted-text">Окрема таблиця з даними з TaskStats</p>
+            </div>
+            <button type="button" id="refreshStats">Оновити статистику</button>
+        </div>
+
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Показник</th>
+                    <th>Значення</th>
+                    <th>Пояснення</th>
+                </tr>
+            </thead>
+            <tbody id="statsTableBody">
+                <tr>
+                    <td colspan="3">Статистика завантажується...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 class="stats-subtitle">Події за місяцем</h3>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Місяць</th>
+                    <th>Кількість подій</th>
+                    
+                </tr>
+            </thead>
+            <tbody id="monthStatsTableBody">
+                <tr>
+                    <td colspan="2">Немає даних</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
 </div>
 
 </body>

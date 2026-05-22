@@ -267,3 +267,37 @@ td button {
         padding: 6px;
     }
 }
+
+/* ===== Окрема таблиця статистики ===== */
+.stats-section {
+    background: #f4e5dc;
+    border: 1px solid #000;
+    box-shadow: 4px 4px 0 #121212;
+}
+
+.stats-table {
+    margin-bottom: 16px;
+}
+
+.stats-table td:nth-child(2) {
+    font-weight: 700;
+}
+
+.stats-subtitle {
+    margin: 18px 0 10px;
+}
+
+.month-bar-wrap {
+    width: 100%;
+    height: 14px;
+    border: 1px solid #000;
+    background: #f4e5dc;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.month-bar {
+    height: 100%;
+    background: #c643d7;
+    border-radius: 999px;
+}

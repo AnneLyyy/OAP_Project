@@ -84,6 +84,9 @@ export function getTop() {
 export function getCount() {
     return request(`${TASKS_PATH}/count`);
 }
+export function getStats() {
+    return request(`${TASKS_PATH}/stats`);
+}
 export function create(dto) {
     return request(TASKS_PATH, {
         method: "POST",
@@ -117,6 +120,7 @@ export const api = {
     getTasksByDate: getByDate,
     getTopTasks: getTop,
     getTasksCount: getCount,
+    getTasksStats: getStats,
     createTask: create,
     updateTask: update,
     replaceTask: replace,

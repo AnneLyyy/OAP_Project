@@ -111,11 +111,21 @@ const sortDirectionSelect =
 const pageSizeSelect =
     document.getElementById("pageSizeSelect") as HTMLSelectElement;
 
+const statsTableBody =
+    document.getElementById("statsTableBody") as HTMLTableSectionElement;
+
+const monthStatsTableBody =
+    document.getElementById("monthStatsTableBody") as HTMLTableSectionElement;
+
+const refreshStatsBtn =
+    document.getElementById("refreshStats") as HTMLButtonElement;
+
 // ================= INIT =================
 (async function init() {
     attachHandlers();
     syncControlsFromState();
     await refreshCount();
+    await renderStats();
     await fetchTasks();
 })();
 
@@ -179,6 +189,8 @@ function attachHandlers(): void {
         state.pagination.page += 1;
         await fetchTasks();
     });
+
+    refreshStatsBtn.addEventListener("click", renderStats);
 
     cancelEditBtn.addEventListener("click", resetForm);
 }
@@ -253,6 +265,65 @@ async function refreshCount(): Promise<void> {
     }
 }
 
+async function renderStats(): Promise<void> {
+    try {
+        const res = await api.getTasksStats();
+        const stats = res.data;
+
+        statsTableBody.innerHTML = `
+            <tr>
+                <td>Найдовша назва</td>
+                <td>${escapeHtml(stats.longestTitle)}</td>
+                <td>${stats.longestTitleLength} символів</td>
+            </tr>
+            <tr>
+                <td>Найбільша вмісткість</td>
+                <td>${stats.biggestCapacity}</td>
+                <td>${escapeHtml(stats.biggestCapacityTitle)}</td>
+            </tr>
+            <tr>
+                <td>Майбутні події</td>
+                <td>${stats.upcomingEvents}</td>
+                <td>Події, дата яких сьогодні або пізніше</td>
+            </tr>
+            <tr>
+                <td>Події, які пройшли</td>
+                <td>${stats.pastEvents}</td>
+                <td>Події з датою раніше сьогоднішньої</td>
+            </tr>
+        `;
+
+        const months = Array.isArray(stats.byMonth) ? stats.byMonth : [];
+        const max = Math.max(...months.map((item: any) => Number(item.count)), 1);
+
+        monthStatsTableBody.innerHTML = months.length
+            ? months.map((item: any) => `
+                <tr>
+                    <td>${escapeHtml(item.month)}</td>
+                    <td>${item.count}</td>
+                    
+                </tr>
+            `).join("")
+            : `
+                <tr>
+                    <td colspan="2">Немає даних за місяцями</td>
+                </tr>
+            `;
+    } catch {
+        statsTableBody.innerHTML = `
+            <tr>
+                <td colspan="3">Статистику не вдалося завантажити</td>
+            </tr>
+        `;
+
+        monthStatsTableBody.innerHTML = `
+            <tr>
+                <td colspan="2">Немає даних</td>
+            </tr>
+        `;
+    }
+}
+
 // ================= SUBMIT =================
 async function onSubmit(e: Event): Promise<void> {
 
@@ -282,6 +353,7 @@ async function onSubmit(e: Event): Promise<void> {
         resetFilters();
         syncControlsFromState();
         await refreshCount();
+        await renderStats();
         await fetchTasks();
 
         resetForm();
@@ -351,6 +423,7 @@ async function deleteTask(id: string): Promise<void> {
 
         await api.deleteTask(id);
         await refreshCount();
+        await renderStats();
         await fetchTasks();
         notice.innerHTML = "Подію видалено";
 

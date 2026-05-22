@@ -9,6 +9,7 @@ router.get("/by-date", wrap(ctrl.getTasksByDate));
 router.get("/with-users", wrap(ctrl.getTasksWithUsers));
 router.get("/count", wrap(ctrl.getTasksCount));
 router.get("/top", wrap(ctrl.getTopTasks));
+router.get("/stats", wrap(ctrl.getTasksStats));
 
 router.get("/:id", wrap(ctrl.getTask));
 router.post("/", wrap(ctrl.createTask));

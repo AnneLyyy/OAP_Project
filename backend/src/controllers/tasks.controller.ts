@@ -200,3 +200,13 @@ export const getTasksCount = async (
 
   res.json(ok(result));
 };
+
+// ================= STATS =================
+export const getTasksStats = async (
+  req: Request,
+  res: Response
+) => {
+  const data = await tasksService.getStats();
+
+  res.json(ok(data));
+};
