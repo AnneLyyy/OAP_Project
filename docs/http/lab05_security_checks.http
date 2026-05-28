@@ -1,0 +1,51 @@
+@baseUrl = http://localhost:3000/api/v1
+@user1 = user-1
+@user2 = user-2
+
+### 0. Без X-Demo-UserId має бути 401
+GET {{baseUrl}}/tasks
+
+### 1. Створити подію user-1 для перевірок SQLi/XSS/IDOR
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+X-Demo-UserId: {{user1}}
+
+{
+  "title": "Lab05 XSS <img src=x onerror=alert('xss')>",
+  "date": "2026-06-01",
+  "location": "Запоріжжя",
+  "capacity": 30,
+  "description": "Текст має відображатися як звичайний текст, не як HTML"
+}
+
+### 2. SQLi-перевірка: ввід має обробитися як текст, не змінити SQL-логіку
+GET {{baseUrl}}/tasks?search=%27%20OR%20%271%27%3D%271&sortBy=date&sortDir=desc&page=1&pageSize=5
+X-Demo-UserId: {{user1}}
+
+### 3. Allowlist сортування: невідоме поле має повернути 400
+GET {{baseUrl}}/tasks?sortBy=id%3B%20DROP%20TABLE%20Tasks&sortDir=desc
+X-Demo-UserId: {{user1}}
+
+### 4. Статистика TaskStats для поточного профілю user-1
+GET {{baseUrl}}/tasks/stats
+X-Demo-UserId: {{user1}}
+
+### 5. Створити подію user-2
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+X-Demo-UserId: {{user2}}
+
+{
+  "title": "Private event user 2",
+  "date": "2026-06-02",
+  "location": "Львів",
+  "capacity": 20,
+  "description": "Цю подію не повинен читати user-1"
+}
+
+### 6. IDOR: підстав сюди id події user-2, але заголовок user-1 -> має бути 404
+GET {{baseUrl}}/tasks/PASTE_USER_2_TASK_ID_HERE
+X-Demo-UserId: {{user1}}
+
+### 7. Security headers: перевірити X-Content-Type-Options, X-Frame-Options, Referrer-Policy
+GET http://localhost:3000/

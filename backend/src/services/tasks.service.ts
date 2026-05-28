@@ -87,7 +87,7 @@ export const tasksService = {
       FROM Tasks
       GROUP BY month
       ORDER BY month
-    `);
+    `); 
 
     await database.run(
       `

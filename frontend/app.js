@@ -1,4 +1,4 @@
-import { api } from "./apiClient.js";
+import { api, getDemoUserId, setDemoUserId } from "./apiClient.js";
 console.log("APP LOADED");
 const state = {
     items: [],
@@ -48,6 +48,7 @@ const pageSizeSelect = document.getElementById("pageSizeSelect");
 const statsTableBody = document.getElementById("statsTableBody");
 const monthStatsTableBody = document.getElementById("monthStatsTableBody");
 const refreshStatsBtn = document.getElementById("refreshStats");
+const demoUserSelect = document.getElementById("demoUserSelect");
 // ================= INIT =================
 (async function init() {
     attachHandlers();
@@ -59,6 +60,15 @@ const refreshStatsBtn = document.getElementById("refreshStats");
 // ================= HANDLERS =================
 function attachHandlers() {
     form.addEventListener("submit", onSubmit);
+    demoUserSelect.addEventListener("change", async () => {
+        setDemoUserId(demoUserSelect.value);
+        resetFilters();
+        resetForm();
+        syncControlsFromState();
+        await refreshCount();
+        await renderStats();
+        await fetchTasks();
+    });
     tableBody.addEventListener("click", onTableClick);
     searchInput.addEventListener("keydown", async (e) => {
         if (e.key === "Enter") {
@@ -76,11 +86,11 @@ function attachHandlers() {
         state.filters.from = fromDateInput.value;
         state.filters.to = toDateInput.value;
         if (!state.filters.from || !state.filters.to) {
-            notice.innerHTML = "Оберіть дату початку і дату завершення.";
+            notice.textContent = "Оберіть дату початку і дату завершення.";
             return;
         }
         if (state.filters.from > state.filters.to) {
-            notice.innerHTML = "Дата початку не може бути більшою за дату завершення.";
+            notice.textContent = "Дата початку не може бути більшою за дату завершення.";
             return;
         }
         state.viewMode = "byDate";
@@ -119,7 +129,7 @@ async function applyMainFilters() {
 // ================= FETCH =================
 async function fetchTasks() {
     state.loading = true;
-    notice.innerHTML = "Завантаження...";
+    notice.textContent = "Завантаження...";
     renderPagination();
     try {
         let res;
@@ -142,12 +152,9 @@ async function fetchTasks() {
         render();
         renderTotalInfo();
         renderFilterInfo();
-        if (state.items.length === 0) {
-            notice.innerHTML = "Немає даних за вибраними умовами.";
-        }
-        else {
-            notice.innerHTML = "";
-        }
+        notice.textContent = state.items.length === 0
+            ? "Немає даних за вибраними умовами."
+            : "";
     }
     catch (err) {
         state.items = [];
@@ -173,56 +180,37 @@ async function renderStats() {
     try {
         const res = await api.getTasksStats();
         const stats = res.data;
-        statsTableBody.innerHTML = `
-            <tr>
-                <td>Найдовша назва</td>
-                <td>${escapeHtml(stats.longestTitle)}</td>
-                <td>${stats.longestTitleLength} символів</td>
-            </tr>
-            <tr>
-                <td>Найбільша вмісткість</td>
-                <td>${stats.biggestCapacity}</td>
-                <td>${escapeHtml(stats.biggestCapacityTitle)}</td>
-            </tr>
-            <tr>
-                <td>Майбутні події</td>
-                <td>${stats.upcomingEvents}</td>
-                <td>Події, дата яких сьогодні або пізніше</td>
-            </tr>
-            <tr>
-                <td>Події, які пройшли</td>
-                <td>${stats.pastEvents}</td>
-                <td>Події з датою раніше сьогоднішньої</td>
-            </tr>
-        `;
+        statsTableBody.textContent = "";
+        addStatsRow("Найдовша назва", stats.longestTitle, `${stats.longestTitleLength} символів`);
+        addStatsRow("Найбільша вмісткість", String(stats.biggestCapacity), stats.biggestCapacityTitle);
+        addStatsRow("Майбутні події", String(stats.upcomingEvents), "Події, дата яких сьогодні або пізніше");
+        addStatsRow("Події, які пройшли", String(stats.pastEvents), "Події з датою раніше сьогоднішньої");
         const months = Array.isArray(stats.byMonth) ? stats.byMonth : [];
-        const max = Math.max(...months.map((item) => Number(item.count)), 1);
-        monthStatsTableBody.innerHTML = months.length
-            ? months.map((item) => `
-                <tr>
-                    <td>${escapeHtml(item.month)}</td>
-                    <td>${item.count}</td>
-                    
-                </tr>
-            `).join("")
-            : `
-                <tr>
-                    <td colspan="2">Немає даних за місяцями</td>
-                </tr>
-            `;
+        monthStatsTableBody.textContent = "";
+        if (months.length === 0) {
+            addSingleCellRow(monthStatsTableBody, "Немає даних за місяцями", 2);
+            return;
+        }
+        months.forEach((item) => {
+            const row = document.createElement("tr");
+            appendCell(row, item.month);
+            appendCell(row, item.count);
+            monthStatsTableBody.appendChild(row);
+        });
     }
     catch {
-        statsTableBody.innerHTML = `
-            <tr>
-                <td colspan="3">Статистику не вдалося завантажити</td>
-            </tr>
-        `;
-        monthStatsTableBody.innerHTML = `
-            <tr>
-                <td colspan="2">Немає даних</td>
-            </tr>
-        `;
+        statsTableBody.textContent = "";
+        addSingleCellRow(statsTableBody, "Статистику не вдалося завантажити", 3);
+        monthStatsTableBody.textContent = "";
+        addSingleCellRow(monthStatsTableBody, "Немає даних", 2);
     }
+}
+function addStatsRow(label, value, explanation) {
+    const row = document.createElement("tr");
+    appendCell(row, label);
+    appendCell(row, value);
+    appendCell(row, explanation);
+    statsTableBody.appendChild(row);
 }
 // ================= SUBMIT =================
 async function onSubmit(e) {
@@ -249,7 +237,7 @@ async function onSubmit(e) {
         await renderStats();
         await fetchTasks();
         resetForm();
-        notice.innerHTML = wasEditing ? "Подію оновлено" : "Подію додано";
+        notice.textContent = wasEditing ? "Подію оновлено" : "Подію додано";
     }
     catch (err) {
         handleApiErrors(err);
@@ -265,17 +253,13 @@ async function onTableClick(e) {
     const deleteId = target.dataset.delete;
     const editId = target.dataset.edit;
     const detailsId = target.dataset.details;
-    if (deleteId) {
-        if (confirm("Видалити подію?")) {
-            await deleteTask(deleteId);
-        }
+    if (deleteId && confirm("Видалити подію?")) {
+        await deleteTask(deleteId);
     }
-    if (editId) {
+    if (editId)
         startEdit(editId);
-    }
-    if (detailsId) {
+    if (detailsId)
         await showDetails(detailsId);
-    }
 }
 // ================= DETAILS =================
 async function showDetails(id) {
@@ -299,7 +283,7 @@ async function deleteTask(id) {
         await refreshCount();
         await renderStats();
         await fetchTasks();
-        notice.innerHTML = "Подію видалено";
+        notice.textContent = "Подію видалено";
     }
     catch (err) {
         setError(err);
@@ -307,61 +291,66 @@ async function deleteTask(id) {
 }
 // ================= RENDER =================
 function render() {
-    tableBody.innerHTML = "";
+    tableBody.textContent = "";
     const items = Array.isArray(state.items) ? state.items : [];
     renderPagination();
     if (items.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="6">
-                    Немає даних
-                </td>
-            </tr>
-        `;
+        addSingleCellRow(tableBody, "Немає даних", 6);
         return;
     }
     items.forEach((item, index) => {
         const number = state.viewMode === "all"
             ? (state.pagination.page - 1) * state.pagination.pageSize + index + 1
             : index + 1;
-        tableBody.innerHTML += `
-            <tr>
-                <td>${number}</td>
-                <td>${escapeHtml(item.title)}</td>
-                <td>${formatDate(item.date)}</td>
-                <td>${escapeHtml(item.location)}</td>
-                <td>${item.capacity}</td>
-                <td>
-                    <button data-details="${item.id}">Деталі</button>
-                    <button data-edit="${item.id}">Ред.</button>
-                    <button data-delete="${item.id}">Вид.</button>
-                </td>
-            </tr>
-        `;
+        const row = document.createElement("tr");
+        appendCell(row, number);
+        appendCell(row, item.title);
+        appendCell(row, formatDate(item.date));
+        appendCell(row, item.location);
+        appendCell(row, item.capacity);
+        const actionsCell = document.createElement("td");
+        actionsCell.append(createActionButton("Деталі", "details", item.id), createActionButton("Ред.", "edit", item.id), createActionButton("Вид.", "delete", item.id));
+        row.appendChild(actionsCell);
+        tableBody.appendChild(row);
     });
 }
+function appendCell(row, text) {
+    const cell = document.createElement("td");
+    cell.textContent = String(text ?? "");
+    row.appendChild(cell);
+    return cell;
+}
+function addSingleCellRow(target, text, colSpan) {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    cell.colSpan = colSpan;
+    cell.textContent = text;
+    row.appendChild(cell);
+    target.appendChild(row);
+}
+function createActionButton(label, action, id) {
+    const button = document.createElement("button");
+    button.textContent = label;
+    button.dataset[action] = id;
+    return button;
+}
 function renderPagination() {
-    pageInfo.textContent =
-        state.viewMode === "all"
-            ? `Сторінка ${state.pagination.page}`
-            : "Фільтрований список";
-    prevPageBtn.disabled =
-        state.loading || state.viewMode !== "all" || state.pagination.page <= 1;
-    nextPageBtn.disabled =
-        state.loading || state.viewMode !== "all" || state.items.length < state.pagination.pageSize;
+    pageInfo.textContent = state.viewMode === "all"
+        ? `Сторінка ${state.pagination.page}`
+        : "Фільтрований список";
+    prevPageBtn.disabled = state.loading || state.viewMode !== "all" || state.pagination.page <= 1;
+    nextPageBtn.disabled = state.loading || state.viewMode !== "all" || state.items.length < state.pagination.pageSize;
 }
 function renderTotalInfo() {
     totalInfo.textContent = `Усього подій: ${state.totalCount}`;
 }
 function renderFilterInfo() {
     if (state.viewMode === "byDate") {
-        activeFilterInfo.textContent =
-            `Показано події з ${formatDate(state.filters.from)} по ${formatDate(state.filters.to)}`;
+        activeFilterInfo.textContent = `Показано події з ${formatDate(state.filters.from)} по ${formatDate(state.filters.to)}`;
         return;
     }
     if (state.viewMode === "top") {
-        activeFilterInfo.textContent =
-            "Показано 3 найбільші події за останні 3 місяці";
+        activeFilterInfo.textContent = "Показано 3 найбільші події за останні 3 місяці";
         return;
     }
     const parts = [
@@ -389,12 +378,20 @@ function validate(dto) {
         showError("title", "Мінімум 3 символи");
         ok = false;
     }
+    else if (dto.title.length > 60) {
+        showError("title", "Максимум 60 символів");
+        ok = false;
+    }
     if (!dto.date) {
         showError("date", "Дата обовʼязкова");
         ok = false;
     }
     if (!dto.location) {
         showError("location", "Локація обовʼязкова");
+        ok = false;
+    }
+    else if (dto.location.length > 80) {
+        showError("location", "Максимум 80 символів");
         ok = false;
     }
     if (!dto.capacity || dto.capacity <= 0) {
@@ -408,18 +405,14 @@ function handleApiErrors(err) {
     setError(err);
     if (Array.isArray(err.details)) {
         err.details.forEach((msg) => {
-            if (msg.includes("title")) {
+            if (msg.includes("title"))
                 showError("title", msg);
-            }
-            if (msg.includes("date")) {
+            if (msg.includes("date"))
                 showError("date", msg);
-            }
-            if (msg.includes("location")) {
+            if (msg.includes("location"))
                 showError("location", msg);
-            }
-            if (msg.includes("capacity")) {
+            if (msg.includes("capacity"))
                 showError("capacity", msg);
-            }
         });
     }
 }
@@ -428,24 +421,16 @@ function showError(field, msg) {
     const input = document.getElementById(field + "Input");
     const error = document.getElementById(field + "Error");
     input?.classList.add("invalid");
-    if (error) {
+    if (error)
         error.textContent = msg;
-    }
 }
 function clearErrors() {
-    [
-        "title",
-        "date",
-        "location",
-        "capacity",
-        "description"
-    ].forEach(f => {
+    ["title", "date", "location", "capacity", "description"].forEach(f => {
         const input = document.getElementById(f + "Input");
         const error = document.getElementById(f + "Error");
         input?.classList.remove("invalid");
-        if (error) {
+        if (error)
             error.textContent = "";
-        }
     });
 }
 // ================= EDIT =================
@@ -482,6 +467,7 @@ function resetFilters() {
     toDateInput.value = "";
 }
 function syncControlsFromState() {
+    demoUserSelect.value = getDemoUserId();
     searchInput.value = state.filters.search;
     fromDateInput.value = state.filters.from;
     toDateInput.value = state.filters.to;
@@ -492,14 +478,11 @@ function syncControlsFromState() {
 // ================= HELPERS =================
 function setError(err) {
     let help = "";
-    if (err.status === 0) {
+    if (err.status === 0)
         help = " Перевір чи запущений backend.";
-    }
-    if (err.status >= 500) {
+    if (err.status >= 500)
         help = " Спробуй пізніше.";
-    }
-    notice.innerHTML =
-        `Помилка (${err.status ?? 500}): ${escapeHtml(err.message)}.${help}`;
+    notice.textContent = `Помилка (${err.status ?? 500}): ${String(err.message ?? "Помилка")}.${help}`;
 }
 function getSortLabel(field) {
     const labels = {
@@ -518,14 +501,6 @@ function formatDate(value) {
         return "-";
     const [year, month, day] = value.split("-");
     if (!year || !month || !day)
-        return escapeHtml(value);
+        return String(value);
     return `${day}.${month}.${year}`;
-}
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }

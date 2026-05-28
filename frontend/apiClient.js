@@ -1,5 +1,17 @@
 export const API_BASE_URL = "http://localhost:3000/api/v1";
 const TASKS_PATH = "/tasks";
+const DEMO_USER_STORAGE_KEY = "oap-demo-user-id";
+export function getDemoUserId() {
+    return localStorage.getItem(DEMO_USER_STORAGE_KEY) || "user-1";
+}
+export function setDemoUserId(userId) {
+    localStorage.setItem(DEMO_USER_STORAGE_KEY, userId);
+}
+function withDemoUserHeader(headers) {
+    const result = new Headers(headers);
+    result.set("X-Demo-UserId", getDemoUserId());
+    return result;
+}
 function buildQuery(params = {}) {
     const query = new URLSearchParams();
     if (params.search)
@@ -22,6 +34,7 @@ async function request(path, options = {}, timeout = 10000) {
     try {
         response = await fetch(`${API_BASE_URL}${path}`, {
             ...options,
+            headers: withDemoUserHeader(options.headers),
             signal: controller.signal
         });
     }
@@ -67,7 +80,7 @@ async function request(path, options = {}, timeout = 10000) {
     }
     return data;
 }
-// Основний список: тут працюють пошук, сортування і пагінація.
+// Основний список
 export function getList(params = {}) {
     return request(`${TASKS_PATH}${buildQuery(params)}`);
 }
@@ -113,7 +126,6 @@ export function remove(id) {
         method: "DELETE"
     });
 }
-// Об'єкт api залишений для зручності app.ts.
 export const api = {
     getTasks: getList,
     getTaskById: getById,

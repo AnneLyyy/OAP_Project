@@ -42,6 +42,8 @@ export function validateTask(data: TaskData) {
 
   if (!data.title || data.title.trim().length < 3) {
     errors.push("title min 3 chars");
+  } else if (data.title.trim().length > 60) {
+    errors.push("title max 60 chars");
   }
 
   if (!data.date || isNaN(Date.parse(data.date))) {
@@ -50,6 +52,8 @@ export function validateTask(data: TaskData) {
 
   if (!data.location || data.location.trim().length === 0) {
     errors.push("location required");
+  } else if (data.location.trim().length > 80) {
+    errors.push("location max 80 chars");
   }
 
   const capacity = normalizeCapacity(data.capacity);
@@ -78,6 +82,8 @@ export function validatePartialTask(data: TaskData) {
 
   if (data.title !== undefined && data.title.trim().length < 3) {
     errors.push("title min 3 chars");
+  } else if (data.title !== undefined && data.title.trim().length > 60) {
+    errors.push("title max 60 chars");
   }
 
   if (data.date !== undefined && isNaN(Date.parse(data.date))) {
@@ -86,6 +92,8 @@ export function validatePartialTask(data: TaskData) {
 
   if (data.location !== undefined && data.location.trim().length === 0) {
     errors.push("location cannot be empty");
+  } else if (data.location !== undefined && data.location.trim().length > 80) {
+    errors.push("location max 80 chars");
   }
 
   const capacity = normalizeCapacity(data.capacity);

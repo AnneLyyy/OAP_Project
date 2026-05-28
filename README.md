@@ -352,3 +352,25 @@ curl -X DELETE http://localhost:3000/api/v1/tasks/<id>
 ```bash
 npm install
 ```
+
+## Lab05 Security
+
+Ця версія виконана для лабораторної роботи №5 на основі початкового проєкту. Збережено CRUD, фільтри, пагінацію, топ‑3, count та таблицю статистики TaskStats.
+
+Додано:
+
+- SQLi захист: параметризовані запити + allowlist сортування;
+- XSS захист: frontend використовує DOM API і `textContent` замість `innerHTML`;
+- IDOR захист: `X-Demo-UserId` і перевірка `userId` для read/update/delete;
+- Security Misconfiguration: security headers, CORS whitelist, єдиний формат помилок;
+- `SECURITY_REPORT.md`;
+- Postman collection: `docs/postman/lab05_security_collection.json`;
+- HTTP перевірки: `docs/http/lab05_security_checks.http`.
+
+Запуск:
+
+```bash
+npm install
+npm run dev:be
+npm run dev:fe
+```

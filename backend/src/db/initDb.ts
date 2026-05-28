@@ -28,6 +28,7 @@ export async function initDb() {
 
     CREATE TABLE IF NOT EXISTS TaskStats (
       id TEXT PRIMARY KEY,
+      ownerUserId TEXT NOT NULL DEFAULT 'all',
       longestTitle TEXT NOT NULL,
       longestTitleLength INTEGER NOT NULL,
       biggestCapacity INTEGER NOT NULL,

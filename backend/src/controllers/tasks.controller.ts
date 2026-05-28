@@ -2,6 +2,8 @@ import type { Request, Response } from "express";
 import { tasksService } from "../services/tasks.service.ts";
 import ApiError from "../infrastructure/apiError.ts";
 import { validateTask, validatePartialTask } from "../infrastructure/validation.ts";
+import { getCurrentUser } from "../infrastructure/demoAuth.ts";
+import { validateDateRange } from "../infrastructure/queryValidation.ts";
 
 // ===== DTO TYPES =====
 type TaskParams = { id: string };
@@ -28,13 +30,10 @@ export const getTasks = async (
   req: Request<{}, {}, {}, QueryParams>,
   res: Response
 ) => {
-  const data = await tasksService.getAll(req.query);
+  const user = getCurrentUser(req);
+  const data = await tasksService.getAll({ ...req.query, userId: user.id });
 
-  res.json(
-    ok(data, {
-      count: data.length
-    })
-  );
+  res.json(ok(data, { count: data.length, userId: user.id }));
 };
 
 // ================= GET BY ID =================
@@ -42,9 +41,11 @@ export const getTask = async (
   req: Request<TaskParams>,
   res: Response
 ) => {
+  const user = getCurrentUser(req);
   const task = await tasksService.getById(req.params.id);
 
   if (!task) {
+    // 404 не розкриває, чи існує чужий ресурс. Це захищає від IDOR-перебору.
     throw new ApiError("NOT_FOUND", "Task not found", 404);
   }
 
@@ -53,6 +54,8 @@ export const getTask = async (
 
 // ================= CREATE =================
 export const createTask = async (req: Request, res: Response) => {
+  const user = getCurrentUser(req);
+
   validateTask(req.body);
 
   const duplicate = await tasksService.findDuplicate(req.body.title, req.body.date);
@@ -66,7 +69,7 @@ export const createTask = async (req: Request, res: Response) => {
     );
   }
 
-  const task = await tasksService.create(req.body);
+  const task = await tasksService.create({ ...req.body, userId: user.id });
 
   res.status(201).json(ok(task));
 };
@@ -76,6 +79,8 @@ export const updateTask = async (
   req: Request<TaskParams>,
   res: Response
 ) => {
+  const user = getCurrentUser(req);
+
   if (Object.keys(req.body).length === 0) {
     throw new ApiError("VALIDATION_ERROR", "Empty body", 400);
   }
@@ -110,12 +115,13 @@ export const updateTask = async (
   res.json(ok(task));
 };
 
-
 // ================= REPLACE =================
 export const replaceTask = async (
   req: Request<TaskParams>,
   res: Response
 ) => {
+  getCurrentUser(req);
+
   validateTask(req.body);
 
   const existing = await tasksService.getById(req.params.id);
@@ -145,6 +151,7 @@ export const deleteTask = async (
   req: Request<TaskParams>,
   res: Response
 ) => {
+  getCurrentUser(req);
   const okResult = await tasksService.delete(req.params.id);
 
   if (!okResult) {
@@ -159,14 +166,10 @@ export const getTasksByDate = async (
   req: Request<{}, {}, {}, QueryParams>,
   res: Response
 ) => {
-  const from = req.query.from;
-  const to = req.query.to;
+  const user = getCurrentUser(req);
+  validateDateRange(req.query.from, req.query.to);
 
-  if (!from || !to) {
-    throw new ApiError("VALIDATION_ERROR", "from and to required", 400);
-  }
-
-  const data = await tasksService.getByDate(from, to);
+  const data = await tasksService.getByDate(req.query.from!, req.query.to!);
 
   res.json(ok(data));
 };
@@ -176,6 +179,7 @@ export const getTopTasks = async (
   req: Request,
   res: Response
 ) => {
+  const user = getCurrentUser(req);
   const data = await tasksService.getTopCapacity(3);
 
   res.json(ok(data));
@@ -186,6 +190,7 @@ export const getTasksWithUsers = async (
   req: Request,
   res: Response
 ) => {
+  getCurrentUser(req);
   const data = await tasksService.getWithUsers();
 
   res.json(ok(data));
@@ -196,6 +201,7 @@ export const getTasksCount = async (
   req: Request,
   res: Response
 ) => {
+  getCurrentUser(req);
   const result = await tasksService.count();
 
   res.json(ok(result));
@@ -206,6 +212,7 @@ export const getTasksStats = async (
   req: Request,
   res: Response
 ) => {
+  getCurrentUser(req);
   const data = await tasksService.getStats();
 
   res.json(ok(data));

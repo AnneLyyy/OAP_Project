@@ -1,8 +1,11 @@
 import { Router } from "express";
 import * as ctrl from "../controllers/tasks.controller.ts";
 import wrap from "../infrastructure/wrap.ts";
+import { demoAuth } from "../infrastructure/demoAuth.ts";
 
 const router = Router();
+
+router.use(wrap(demoAuth));
 
 router.get("/", wrap(ctrl.getTasks));
 router.get("/by-date", wrap(ctrl.getTasksByDate));

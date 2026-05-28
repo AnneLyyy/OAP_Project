@@ -20,13 +20,23 @@
 
     <h1>Сервіс реєстрації подій</h1>
 
+    <div class="profile-panel">
+        <label for="demoUserSelect">Поточний профіль</label>
+        <select id="demoUserSelect">
+            <option value="user-1">Анна</option>
+            <option value="user-2">Богдан</option>
+            <option value="user-3">Марія</option>
+        </select>
+        <p class="muted-text">Кожен профіль бачить і змінює тільки свої події. Таблиця статистики також рахується для поточного профілю.</p>
+    </div>
+
     <!-- ФОРМА -->
     <form id="createForm">
         <h2 id="formTitle">Нова подія</h2>
 
         <div class="field">
             <label for="titleInput">Назва</label>
-            <input id="titleInput" type="text">
+            <input id="titleInput" type="text" maxlength="60" placeholder="3–60 символів">
             <p class="error-text" id="titleError"></p>
         </div>
 
@@ -38,7 +48,7 @@
 
         <div class="field">
             <label for="locationInput">Локація</label>
-            <input id="locationInput" type="text">
+            <input id="locationInput" type="text" maxlength="80" placeholder="До 80 символів">
             <p class="error-text" id="locationError"></p>
         </div>
 
@@ -125,7 +135,7 @@
             </div>
         </div>
 
-        <table>
+        <table class="tasks-table">
             <thead>
                 <tr>
                     <th>#</th>
@@ -151,7 +161,7 @@
         <div class="section-header">
             <div>
                 <h2>Статистика подій</h2>
-                <p class="muted-text">Окрема таблиця з даними з TaskStats</p>
+                <p class="muted-text">Окрема таблиця з даними</p>
             </div>
             <button type="button" id="refreshStats">Оновити статистику</button>
         </div>

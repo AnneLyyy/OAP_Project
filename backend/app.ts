@@ -8,6 +8,7 @@ import usersRoutes from "./src/routes/user.routes.ts";
 
 import errorMiddleware from "./src/infrastructure/errorMiddleware.ts";
 import { requestLogger } from "./src/infrastructure/logMiddleware.ts";
+import { securityHeaders } from "./src/infrastructure/securityHeaders.ts";
 
 import { initDb } from "./src/db/initDb.ts";
 import { migrate } from "./src/db/migrate.ts";
@@ -41,9 +42,12 @@ const corsOptions: CorsOptions = {
     return callback(new Error("CORS blocked"));
   },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Demo-UserId"],
   optionsSuccessStatus: 204
 };
+
+// Базові security headers і CORS мають бути до роутів.
+app.use(securityHeaders);
 
 // CORS має бути до роутів і з whitelist, не з "*".
 app.use(cors(corsOptions));
